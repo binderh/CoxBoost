@@ -20,7 +20,7 @@ The following is a usage example, adapted from the package help page of `resampl
     x <- matrix(rnorm(n*p,0,1),n,p)
     beta.vec1  <- c(c(1,1,1,1,1),rep(0,p-5))  
     beta.vec0  <- c(c(0,0,0,0,0),rep(0,p-5)) 
-    linpred<-ifelse(group==1,x \%*\% beta.vec1,x \%*\% beta.vec0)
+    linpred<-ifelse(group==1,x %*% beta.vec1,x %*% beta.vec0)
     set.seed(1234)
     real.time<- (-(log(runif(n)))/(1/20*exp(linpred)))
     cens.time <- rexp(n,rate=1/20)
