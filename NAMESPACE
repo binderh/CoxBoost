@@ -1,7 +1,7 @@
 import(survival)
 useDynLib(CoxBoost,find_best_candidate,get_I_vec)
 
-export(CoxBoost,iCoxBoost,cvcb.control,cv.CoxBoost,optimCoxBoostPenalty,optimStepSizeFactor,estimPVal)
+export(CoxBoost,iCoxBoost,cvcb.control,cv.CoxBoost,optimCoxBoostPenalty,optimStepSizeFactor,estimPVal,resample.CoxBoost,stabtrajec,weightfreqmap)
 S3method(predict,CoxBoost)
 S3method(predict,iCoxBoost)
 S3method(print,CoxBoost)
