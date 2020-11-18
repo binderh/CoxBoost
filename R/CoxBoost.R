@@ -223,6 +223,200 @@ update.penalty <- function(penalty,sf.scheme,actual.stepsize.factor,
 }
 
 
+
+
+#' Fit a Cox model by likelihood based boosting
+#'
+#' \code{CoxBoost} is used to fit a Cox proportional hazards model by
+#' componentwise likelihood based boosting.  It is especially suited for models
+#' with a large number of predictors and allows for mandatory covariates with
+#' unpenalized parameter estimates.
+#'
+#' In contrast to gradient boosting (implemented e.g. in the \code{glmboost}
+#' routine in the R package \code{mboost}, using the \code{CoxPH} loss
+#' function), \code{CoxBoost} is not based on gradients of loss functions, but
+#' adapts the offset-based boosting approach from Tutz and Binder (2007) for
+#' estimating Cox proportional hazards models. In each boosting step the
+#' previous boosting steps are incorporated as an offset in penalized partial
+#' likelihood estimation, which is employed for obtain an update for one single
+#' parameter, i.e., one covariate, in every boosting step. This results in
+#' sparse fits similar to Lasso-like approaches, with many estimated
+#' coefficients being zero. The main model complexity parameter, which has to
+#' be selected (e.g. by cross-validation using \code{\link{cv.CoxBoost}}), is
+#' the number of boosting steps \code{stepno}. The penalty parameter
+#' \code{penalty} can be chosen rather coarsely, either by hand or using
+#' \code{\link{optimCoxBoostPenalty}}.
+#'
+#' The advantage of the offset-based approach compared to gradient boosting is
+#' that the penalty structure is very flexible. In the present implementation
+#' this is used for allowing for unpenalized mandatory covariates, which
+#' receive a very fast coefficient build-up in the course of the boosting
+#' steps, while the other (optional) covariates are subjected to penalization.
+#' For example in a microarray setting, the (many) microarray features would be
+#' taken to be optional covariates, and the (few) potential clinical covariates
+#' would be taken to be mandatory, by including their indices in
+#' \code{unpen.index}.
+#'
+#' If a group of correlated covariates has influence on the response, e.g.
+#' genes from the same pathway, componentwise boosting will often result in a
+#' non-zero estimate for only one member of this group. To avoid this,
+#' information on the connection between covariates can be provided in
+#' \code{pendistmat}. If then, in addition, a penalty updating scheme with
+#' \code{stepsize.factor} < 1 is chosen, connected covariates are more likely
+#' to be chosen in future boosting steps, if a directly connected covariate has
+#' been chosen in an earlier boosting step (see Binder and Schumacher, 2009b).
+#'
+#' @param time vector of length \code{n} specifying the observed times.
+#' @param status censoring indicator, i.e., vector of length \code{n} with
+#' entries \code{0} for censored observations and \code{1} for uncensored
+#' observations. If this vector contains elements not equal to \code{0} or
+#' \code{1}, these are taken to indicate events from a competing risk and a
+#' model for the subdistribution hazard with respect to event \code{1} is
+#' fitted (see e.g. Fine and Gray, 1999; Binder et al. 2009a).
+#' @param x \code{n * p} matrix of covariates.
+#' @param unpen.index vector of length \code{p.unpen} with indices of mandatory
+#' covariates, where parameter estimation should be performed unpenalized.
+#' @param standardize logical value indicating whether covariates should be
+#' standardized for estimation. This does not apply for mandatory covariates,
+#' i.e., these are not standardized.
+#' @param subset a vector specifying a subset of observations to be used in the
+#' fitting process.
+#' @param weights optional vector of length \code{n}, for specifying weights
+#' for the individual observations.
+#' @param penalty penalty value for the update of an individual element of the
+#' parameter vector in each boosting step.
+#' @param criterion indicates the criterion to be used for selection in each
+#' boosting step. \code{"pscore"} corresponds to the penalized score
+#' statistics, \code{"score"} to the un-penalized score statistics. Different
+#' results will only be seen for un-standardized covariates (\code{"pscore"}
+#' will result in preferential selection of covariates with larger covariance),
+#' or if different penalties are used for different covariates.
+#' \code{"hpscore"} and \code{"hscore"} correspond to \code{"pscore"} and
+#' \code{"score"}. However, a heuristic is used for evaluating only a subset of
+#' covariates in each boosting step, as described in Binder et al. (2011). This
+#' can considerably speed up computation, but may lead to different results.
+#' @param stepsize.factor determines the step-size modification factor by which
+#' the natural step size of boosting steps should be changed after a covariate
+#' has been selected in a boosting step. The default (value \code{1}) implies
+#' constant penalties, for a value < 1 the penalty for a covariate is increased
+#' after it has been selected in a boosting step, and for a value > 1 the
+#' penalty it is decreased. If \code{pendistmat} is given, penalty updates are
+#' only performed for covariates that have at least one connection to another
+#' covariate.
+#' @param sf.scheme scheme for changing step sizes (via
+#' \code{stepsize.factor}). \code{"linear"} corresponds to the scheme described
+#' in Binder and Schumacher (2009b), \code{"sigmoid"} employs a sigmoid shape.
+#' @param pendistmat connection matrix with entries ranging between 0 and 1,
+#' with entry \code{(i,j)} indicating the certainty of the connection between
+#' covariates \code{i} and \code{j}. According to this information penalty
+#' changes due to \code{stepsize.factor} < 1 are propagated, i.e., if entry
+#' \code{(i,j)} is non-zero, the penalty for covariate \code{j} is decreased
+#' after it has been increased for covariate \code{i}, after it has been
+#' selected in a boosting step. This matrix either has to have dimension
+#' \code{(p - p.unpen) * (p - p.unpen)} or the indicices of the
+#' \code{p.connected} connected covariates have to be given in
+#' \code{connected.index}, in which case the matrix has to have dimension
+#' \code{p.connected * p.connected}. Generally, sparse matices from package
+#' \code{Matrix} can be used to save memory.
+#' @param connected.index indices of the \code{p.connected} connected
+#' covariates, for which \code{pendistmat} provides the connection information
+#' for distributing changes in penalties. No overlap with \code{unpen.index} is
+#' allowed. If \code{NULL}, and a connection matrix is given, all covariates
+#' are assumed to be connected.
+#' @param stepno number of boosting steps (\code{m}).
+#' @param x.is.01 logical value indicating whether (the non-mandatory part of)
+#' \code{x} contains just values 0 and 1, i.e., binary covariates. If this is
+#' the case and indicated by this argument, computations are much faster.
+#' @param return.score logical value indicating whether the value of the score
+#' statistic (or penalized score statistic, depending on \code{criterion}), as
+#' evaluated in each boosting step for every covariate, should be returned. The
+#' corresponding element \code{scoremat} can become very large (and needs much
+#' memory) when the number of covariates and boosting steps is large.
+#' @param trace logical value indicating whether progress in estimation should
+#' be indicated by printing the name of the covariate updated.
+#' @return \code{CoxBoost} returns an object of class \code{CoxBoost}.
+#'
+#' \item{n, p}{number of observations and number of covariates.}
+#' \item{stepno}{number of boosting steps.} \item{xnames}{vector of length
+#' \code{p} containing the names of the covariates. This information is
+#' extracted from \code{x} or names following the scheme \code{V1, V2, ...}}
+#' are used. \item{coefficients}{\code{(stepno+1) * p} matrix containing the
+#' coefficient estimates for the (standardized) optional covariates for
+#' boosting steps \code{0} to \code{stepno}. This will typically be a sparse
+#' matrix, built using package \code{\link{Matrix}}}.
+#' \item{scoremat}{\code{stepno * p} matrix containing the value of the score
+#' statistic for each of the optional covariates before each boosting step.}
+#' \item{meanx, sdx}{vector of mean values and standard deviations used for
+#' standardizing the covariates.} \item{unpen.index}{indices of the mandatory
+#' covariates in the original covariate matrix \code{x}.} \item{penalty}{If
+#' \code{stepsize.factor != 1}, \code{stepno * (p - p.unpen)} matrix containing
+#' the penalties used for every boosting step and every penalized covariate,
+#' otherwise a vector containing the unchanged values of the penalty employed
+#' in each boosting step.} \item{time}{observed times given in the
+#' \code{CoxBoost} call.} \item{status}{censoring indicator given in the
+#' \code{CoxBoost} call.} \item{event.times}{vector with event times from the
+#' data given in the \code{CoxBoost} call.}
+#' \item{linear.predictors}{\code{(stepno+1) * n} matrix giving the linear
+#' predictor for boosting steps \code{0} to \code{stepno} and every
+#' observation.} \item{Lambda}{matrix with the Breslow estimate for the
+#' cumulative baseline hazard for boosting steps \code{0} to \code{stepno} for
+#' every event time.} \item{logplik}{partial log-likelihood of the fitted model
+#' in the final boosting step.}
+#' @author Written by Harald Binder \email{binderh@@uni-mainz.de}.
+#' @seealso \code{\link{predict.CoxBoost}}, \code{\link{cv.CoxBoost}}.
+#' @references Binder, H., Benner, A., Bullinger, L., and Schumacher, M.
+#' (2013). Tailoring sparse multivariable regression techniques for prognostic
+#' single-nucleotide polymorphism signatures. Statistics in Medicine, doi:
+#' 10.1002/sim.5490.
+#'
+#' Binder, H., Allignol, A., Schumacher, M., and Beyersmann, J. (2009).
+#' Boosting for high-dimensional time-to-event data with competing risks.
+#' Bioinformatics, 25:890-896.
+#'
+#' Binder, H. and Schumacher, M. (2009). Incorporating pathway information into
+#' boosting estimation of high-dimensional risk prediction models. BMC
+#' Bioinformatics. 10:18.
+#'
+#' Binder, H. and Schumacher, M. (2008). Allowing for mandatory covariates in
+#' boosting estimation of sparse high-dimensional survival models. BMC
+#' Bioinformatics. 9:14.
+#'
+#' Tutz, G. and Binder, H. (2007) Boosting ridge regression. Computational
+#' Statistics \& Data Analysis, 51(12):6044-6059.
+#'
+#' Fine, J. P. and Gray, R. J. (1999). A proportional hazards model for the
+#' subdistribution of a competing risk. Journal of the American Statistical
+#' Association. 94:496-509.
+#' @keywords models regression survial
+#' @examples
+#'
+#' #   Generate some survival data with 10 informative covariates
+#' n <- 200; p <- 100
+#' beta <- c(rep(1,10),rep(0,p-10))
+#' x <- matrix(rnorm(n*p),n,p)
+#' real.time <- -(log(runif(n)))/(10*exp(drop(x %*% beta)))
+#' cens.time <- rexp(n,rate=1/10)
+#' status <- ifelse(real.time <= cens.time,1,0)
+#' obs.time <- ifelse(real.time <= cens.time,real.time,cens.time)
+#'
+#' #   Fit a Cox proportional hazards model by CoxBoost
+#'
+#' cbfit <- CoxBoost(time=obs.time,status=status,x=x,stepno=100,penalty=100)
+#' summary(cbfit)
+#'
+#' #   ... with covariates 1 and 2 being mandatory
+#'
+#' cbfit.mand <- CoxBoost(time=obs.time,status=status,x=x,unpen.index=c(1,2),
+#'                        stepno=100,penalty=100)
+#' summary(cbfit.mand)
+#'
+#'
+#' @import Matrix
+#' @import prodlim
+#' @import survival
+#' @importFrom graphics abline axis legend lines points text
+#' @importFrom stats as.dist cor hclust heatmap model.frame model.matrix model.response pchisq predict sd terms
+#' @export
 CoxBoost <- function(time,status,x,unpen.index=NULL,standardize=TRUE,subset=1:length(time),
                      weights=NULL,stratum=NULL,stepno=100,penalty=9*sum(status[subset]==1),
                      criterion=c("pscore","score","hpscore","hscore"),
@@ -440,7 +634,7 @@ CoxBoost <- function(time,status,x,unpen.index=NULL,standardize=TRUE,subset=1:le
                 }
             }
 
-            model[[model.index]]$coefficients <- Matrix(0,stepno+1,p)
+            model[[model.index]]$coefficients <- Matrix::Matrix(0,stepno+1,p)
             if (!is.null(unpen.index)) {
                 model[[model.index]]$unpen.coefficients <- matrix(NA,stepno+1,ncol(unpen.x[[1]]))
             } else {
@@ -751,7 +945,7 @@ CoxBoost <- function(time,status,x,unpen.index=NULL,standardize=TRUE,subset=1:le
         object$p <- object$p + length(object$unpen.index)
 
         for (i in seq(along=model)) {
-            combined.coefficients <- Matrix(0,nrow(model[[i]]$coefficients),object$p)
+            combined.coefficients <- Matrix::Matrix(0,nrow(model[[i]]$coefficients),object$p)
             combined.coefficients[,pen.index] <- model[[i]]$coefficients
             combined.coefficients[,object$unpen.index] <- model[[i]]$unpen.coefficients
             model[[i]]$coefficients <- combined.coefficients
@@ -847,14 +1041,44 @@ joint.print <- function(x,long=FALSE) {
     }
 }
 
+#' Print a CoxBoost type
+#' @param x a CoxBoost object
+#' @param ... not used
+#' @method print CoxBoost
+#' @export
 print.CoxBoost <- function(x,...) {
     joint.print(x,long=FALSE)
 }
 
+#' Summary of a CoxBoost type
+#' @param object a CoxBoost object
+#' @param ... not used
+#' @method summary CoxBoost
+#' @export
 summary.CoxBoost <- function(object,...) {
     joint.print(object,long=TRUE)
 }
 
+
+
+#' Plot coefficient paths from CoxBoost fit
+#'
+#' Plots coefficient paths, i.e. the parameter estimates plotted against the
+#' boosting steps as obtained from a CoxBoost object fitted by
+#' \code{\link{CoxBoost}}.
+#'
+#'
+#' @param x fitted CoxBoost object from a \code{\link{CoxBoost}} call.
+#' @param line.col color of the lines of the coefficient path
+#' @param label.cex scaling factor for the variable labels.
+#' @param xlab label for the x axis, default label when \code{NULL}.
+#' @param ylab label for the y axis, default label when \code{NULL}.
+#' @param xlim,ylim plotting ranges, default label when \code{NULL}.
+#' @param main a main title for the plot
+#' @param \dots miscellaneous arguments, passed to the plot routine.
+#' @return No value is returned, but a plot is generated.
+#' @author Harald Binder \email{binderh@@uni-mainz.de}
+#' @export
 plot.CoxBoost <- function(x,line.col="dark grey",label.cex=0.6,xlab=NULL,ylab=NULL,xlim=NULL,ylim=NULL,main=NULL,...) {
     if (is.null(xlab)) xlab <- "boosting step"
     if (is.null(ylab)) ylab <- "estimated coefficients"
@@ -922,6 +1146,27 @@ plot.CoxBoost <- function(x,line.col="dark grey",label.cex=0.6,xlab=NULL,ylab=NU
     }
 }
 
+
+
+#' Coeffients from CoxBoost fit
+#'
+#' Extracts the coefficients from the specified boosting steps of a CoxBoost
+#' object fitted by \code{\link{CoxBoost}}.
+#'
+#'
+#' @param object fitted CoxBoost object from a \code{\link{CoxBoost}} call.
+#' @param at.step scalar or vector of boosting step(s) at which prediction is
+#' wanted. If no step is given, the final boosting step is used.
+#' @param scaled logical value indicating whether coefficients should be
+#' returned scaled to be at the level of the original covariate values, or
+#' unscaled as used internally when \code{standardize=TRUE} is used in the
+#' \code{\link{CoxBoost}} call.
+#' @param \dots miscellaneous arguments, none of which is used at the moment.
+#' @return For a vector of length \code{p} (number of covariates)
+#' (\code{at.step} being a scalar) or a \code{length(at.step) * p} matrix
+#' (\code{at.step} being a vector).
+#' @author Harald Binder \email{binderh@@uni-mainz.de}
+#' @export
 coef.CoxBoost <- function(object,at.step=NULL,scaled=TRUE,...) {
     beta <- list()
 
@@ -976,6 +1221,82 @@ coef.CoxBoost <- function(object,at.step=NULL,scaled=TRUE,...) {
 }
 
 
+
+
+#' Predict method for CoxBoost fits
+#'
+#' Obtains predictions at specified boosting steps from a CoxBoost object
+#' fitted by \code{\link{CoxBoost}}.
+#'
+#'
+#' @param object fitted CoxBoost object from a \code{\link{CoxBoost}} call.
+#' @param newdata \code{n.new * p} matrix with new covariate values. If just
+#' prediction for the training data is wanted, it can be omitted.
+#' @param newtime,newstatus vectors with observed time and censoring indicator
+#' (0 for censoring, 1 for no censoring, and any other values for competing
+#' events in a competing risks setting) for new observations, where prediction
+#' is wanted. Only required if predicted partial log-likelihood is wanted,
+#' i.e., if \code{type="logplik"}. This can also be omitted when prediction is
+#' only wanted for the training data, i.e., \code{newdata=NULL}.
+#' @param subset an optional vector specifying a subset of observations to be
+#' used for evaluation.
+#' @param at.step scalar or vector of boosting step(s) at which prediction is
+#' wanted. If \code{type="risk"} is used, only one step is admissible. If no
+#' step is given, the final boosting step is used.
+#' @param times vector with \code{T} time points where prediction is wanted.
+#' Only needed for \code{type="risk"}
+#' @param type type of prediction to be returned: \code{"lp"} gives the linear
+#' predictor, \code{"logplik"} the partial log-likelihood, \code{"risk"} the
+#' predicted probability of not yet having had the event at the time points
+#' given in \code{times}, and \code{"CIF"} the predicted cumulative incidence
+#' function, i.e., the predicted probability of having had the event of
+#' interest.
+#' @param \dots miscellaneous arguments, none of which is used at the moment.
+#' @return For \code{type="lp"} and \code{type="logplik"} a vector of length
+#' \code{n.new} (\code{at.step} being a scalar) or a \code{n.new *
+#' length(at.step)} matrix (\code{at.step} being a vector) with predictions is
+#' returned.  For \code{type="risk"} or \code{type="CIF"} a \code{n.new * T}
+#' matrix with predicted probabilities at the specific time points is returned.
+#' @author Harald Binder \email{binderh@@uni-mainz.de}
+#' @keywords models regression survial
+#' @examples
+#'
+#' #   Generate some survival data with 10 informative covariates
+#' n <- 200; p <- 100
+#' beta <- c(rep(1,10),rep(0,p-10))
+#' x <- matrix(rnorm(n*p),n,p)
+#' real.time <- -(log(runif(n)))/(10*exp(drop(x %*% beta)))
+#' cens.time <- rexp(n,rate=1/10)
+#' status <- ifelse(real.time <= cens.time,1,0)
+#' obs.time <- ifelse(real.time <= cens.time,real.time,cens.time)
+#'
+#' #   define training and test set
+#'
+#' train.index <- 1:100
+#' test.index <- 101:200
+#'
+#' #   Fit CoxBoost to the training data
+#'
+#' cbfit <- CoxBoost(time=obs.time[train.index],status=status[train.index],
+#'                   x=x[train.index,],stepno=300,penalty=100)
+#'
+#' #   mean partial log-likelihood for test set in every boosting step
+#'
+#' step.logplik <- predict(cbfit,newdata=x[test.index,],
+#'                         newtime=obs.time[test.index],
+#'                         newstatus=status[test.index],
+#'                         at.step=0:300,type="logplik")
+#'
+#' plot(step.logplik)
+#'
+#' #   names of covariates with non-zero coefficients at boosting step
+#' #   with maximal test set partial log-likelihood
+#'
+#' print(cbfit$xnames[cbfit$coefficients[which.max(step.logplik),] != 0])
+#'
+#'
+#'
+#' @export
 predict.CoxBoost <- function(object,newdata=NULL,newtime=NULL,newstatus=NULL,subset=NULL,weights=NULL,stratum=NULL,at.step=NULL,times=NULL,type=c("lp","logplik","risk","CIF"),...)
 {
     type <- match.arg(type)
@@ -1243,6 +1564,101 @@ predict.CoxBoost <- function(object,newdata=NULL,newtime=NULL,newstatus=NULL,sub
     res
 }
 
+
+
+#' Determines the optimal number of boosting steps by cross-validation
+#'
+#' Performs a K-fold cross-validation for \code{\link{CoxBoost}} in search for
+#' the optimal number of boosting steps.
+#'
+#'
+#' @param time vector of length \code{n} specifying the observed times.
+#' @param status censoring indicator, i.e., vector of length \code{n} with
+#' entries \code{0} for censored observations and \code{1} for uncensored
+#' observations. If this vector contains elements not equal to \code{0} or
+#' \code{1}, these are taken to indicate events from a competing risk and a
+#' model for the subdistribution hazard with respect to event \code{1} is
+#' fitted (see e.g. Fine and Gray, 1999).
+#' @param x \code{n * p} matrix of covariates.
+#' @param subset a vector specifying a subset of observations to be used in the
+#' fitting process.
+#' @param maxstepno maximum number of boosting steps to evaluate, i.e, the
+#' returned ``optimal'' number of boosting steps will be in the range
+#' \code{[0,maxstepno]}.
+#' @param K number of folds to be used for cross-validation. If \code{K} is
+#' larger or equal to the number of non-zero elements in \code{status},
+#' leave-one-out cross-validation is performed.
+#' @param type way of calculating the partial likelihood contribution of the
+#' observation in the hold-out folds: \code{"verweij"} uses the more
+#' appropriate method described in Verweij and van Houwelingen (1996),
+#' \code{"naive"} uses the approach where the observations that are not in the
+#' hold-out folds are ignored (often found in other R packages).
+#' @param parallel logical value indicating whether computations in the
+#' cross-validation folds should be performed in parallel on a compute cluster,
+#' using package \code{snowfall}. Parallelization is performed via the package
+#' \code{snowfall} and the initialization function of of this package,
+#' \code{sfInit}, should be called before calling \code{cv.CoxBoost}.
+#' @param multicore indicates whether computations in the cross-validation
+#' folds should be performed in parallel, using package \code{parallel}. If
+#' \code{TRUE}, package \code{parallel} is employed using the default number of
+#' cores. A value larger than \code{1} is taken to be the number of cores that
+#' should be employed.
+#' @param upload.x logical value indicating whether \code{x} should/has to be
+#' uploaded to the compute cluster for parallel computation. Uploading this
+#' only once (using \code{sfExport(x)} from library \code{snowfall}) can save
+#' much time for large data sets.
+#' @param folds if not \code{NULL}, this has to be a list of length \code{K},
+#' each element being a vector of indices of fold elements. Useful for
+#' employing the same folds for repeated runs.
+#' @param trace logical value indicating whether progress in estimation should
+#' be indicated by printing the number of the cross-validation fold and the
+#' index of the covariate updated.
+#' @param \dots miscellaneous parameters for the calls to
+#' \code{\link{CoxBoost}}
+#' @return List with the following components: \item{mean.logplik}{vector of
+#' length \code{maxstepno+1} with the mean partial log-likelihood for boosting
+#' steps \code{0} to \code{maxstepno}} \item{se.logplik}{vector with standard
+#' error estimates for the mean partial log-likelihood criterion for each
+#' boosting step.} \item{optimal.step}{optimal boosting step number, i.e., with
+#' minimum mean partial log-likelihood.} \item{folds}{list of length \code{K},
+#' where the elements are vectors of the indices of observations in the
+#' respective folds.}
+#' @author Harald Binder \email{binderh@@uni-mainz.de}
+#' @seealso \code{\link{CoxBoost}}, \code{\link{optimCoxBoostPenalty}}
+#' @references Verweij, P. J. M. and van Houwelingen, H. C. (1993).
+#' Cross-validation in survival analysis. Statistics in Medicine,
+#' 12(24):2305-2314.
+#' @keywords models regression survial
+#' @examples
+#'
+#' \dontrun{
+#' #   Generate some survival data with 10 informative covariates
+#' n <- 200; p <- 100
+#' beta <- c(rep(1,10),rep(0,p-10))
+#' x <- matrix(rnorm(n*p),n,p)
+#' real.time <- -(log(runif(n)))/(10*exp(drop(x %*% beta)))
+#' cens.time <- rexp(n,rate=1/10)
+#' status <- ifelse(real.time <= cens.time,1,0)
+#' obs.time <- ifelse(real.time <= cens.time,real.time,cens.time)
+#'
+#'
+#' #  10-fold cross-validation
+#'
+#' cv.res <- cv.CoxBoost(time=obs.time,status=status,x=x,maxstepno=500,
+#'                       K=10,type="verweij",penalty=100)
+#'
+#' #   examine mean partial log-likelihood in the course of the boosting steps
+#' plot(cv.res$mean.logplik)
+#'
+#' #   Fit with optimal number of boosting steps
+#'
+#' cbfit <- CoxBoost(time=obs.time,status=status,x=x,stepno=cv.res$optimal.step,
+#'                   penalty=100)
+#' summary(cbfit)
+#'
+#' }
+#'
+#' @export
 cv.CoxBoost <- function(time,status,x,subset=1:length(time),weights=NULL,stratum=NULL,maxstepno=100,K=10,type=c("verweij","naive"),cmprsk=c("sh","csh","ccsh"),parallel=FALSE,upload.x=TRUE,
                         multicore=FALSE,folds=NULL,
                         trace=FALSE,...) {
@@ -1372,6 +1788,82 @@ cv.CoxBoost <- function(time,status,x,subset=1:length(time),weights=NULL,stratum
 }
 
 
+
+
+#' Coarse line search for adequate penalty parameter
+#'
+#' This routine helps in finding a penalty value that leads to an ``optimal''
+#' number of boosting steps for CoxBoost, determined by cross-validation, that
+#' is not too small/in a specified range.
+#'
+#' The penalty parameter for \code{\link{CoxBoost}} has to be chosen only very
+#' coarsely.  In Tutz and Binder (2006) it is suggested for likelihood based
+#' boosting just to make sure, that the optimal number of boosting steps,
+#' according to some criterion such as cross-validation, is larger or equal to
+#' 50.  With a smaller number of steps, boosting may become too ``greedy'' and
+#' show sub-optimal performance.  This procedure uses a very coarse line search
+#' and so one should specify a rather large range of boosting steps.
+#'
+#' @param time vector of length \code{n} specifying the observed times.
+#' @param status censoring indicator, i.e., vector of length \code{n} with
+#' entries \code{0} for censored observations and \code{1} for uncensored
+#' observations. If this vector contains elements not equal to \code{0} or
+#' \code{1}, these are taken to indicate events from a competing risk and a
+#' model for the subdistribution hazard with respect to event \code{1} is
+#' fitted (see e.g. Fine and Gray, 1999).
+#' @param x \code{n * p} matrix of covariates.
+#' @param minstepno,maxstepno range of boosting steps in which the ``optimal''
+#' number of boosting steps is wanted to be.
+#' @param start.penalty start value for the search for the appropriate penalty.
+#' @param iter.max maximum number of search iterations.
+#' @param upper.margin specifies the fraction of \code{maxstepno} which is used
+#' as an upper margin in which a cross-validation minimum is not taken to be
+#' one. This is necessary because of random fluctuations of cross-validated
+#' partial log-likelihood.
+#' @param parallel logical value indicating whether computations in the
+#' cross-validation folds should be performed in parallel on a compute cluster.
+#' Parallelization is performed via the package \code{snowfall} and the
+#' initialization function of of this package, \code{sfInit}, should be called
+#' before calling \code{cv.CoxBoost}.
+#' @param trace logical value indicating whether information on progress should
+#' be printed.
+#' @param \dots miscellaneous parameters for \code{\link{cv.CoxBoost}}.
+#' @return List with element \code{penalty} containing the ``optimal'' penalty
+#' and \code{cv.res} containing the corresponding result of \code{cv.CoxBoost}.
+#' @author Written by Harald Binder \email{binderh@@uni-mainz.de}.
+#' @seealso \code{\link{CoxBoost}}, \code{\link{cv.CoxBoost}}
+#' @references Tutz, G. and Binder, H. (2006) Generalized additive modelling
+#' with implicit variable selection by likelihood based boosting.
+#' \emph{Biometrics}, 62:961-971.
+#' @keywords models smooth regression
+#' @examples
+#'
+#' \dontrun{
+#' #   Generate some survival data with 10 informative covariates
+#' n <- 200; p <- 100
+#' beta <- c(rep(1,10),rep(0,p-10))
+#' x <- matrix(rnorm(n*p),n,p)
+#' real.time <- -(log(runif(n)))/(10*exp(drop(x %*% beta)))
+#' cens.time <- rexp(n,rate=1/10)
+#' status <- ifelse(real.time <= cens.time,1,0)
+#' obs.time <- ifelse(real.time <= cens.time,real.time,cens.time)
+#'
+#' #  determine penalty parameter
+#'
+#' optim.res <- optimCoxBoostPenalty(time=obs.time,status=status,x=x,
+#'                                   trace=TRUE,start.penalty=500)
+#'
+#' #   Fit with obtained penalty parameter and optimal number of boosting
+#' #   steps obtained by cross-validation
+#'
+#' cbfit <- CoxBoost(time=obs.time,status=status,x=x,
+#'                   stepno=optim.res$cv.res$optimal.step,
+#'                   penalty=optim.res$penalty)
+#' summary(cbfit)
+#'
+#' }
+#'
+#' @export
 optimCoxBoostPenalty <- function(time,status,x,minstepno=50,maxstepno=200,start.penalty=9*sum(status==1),
                                  iter.max=10,upper.margin=0.05,parallel=FALSE,trace=FALSE,...)
 {
