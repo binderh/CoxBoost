@@ -46,6 +46,8 @@ value at any weight are presented in the stability trajectory plot.}
 
 \item{legendval}{space between the last plotted covariate and the legend on
 the right side of the plot.}
+
+\item{method}{passed to \code{\link{hclust}} for the the agglomeration method to be used}
 }
 \value{
 No value is returned, but the stability trajectory plot is

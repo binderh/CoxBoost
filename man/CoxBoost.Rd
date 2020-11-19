@@ -52,6 +52,10 @@ fitting process.}
 \item{weights}{optional vector of length \code{n}, for specifying weights
 for the individual observations.}
 
+\item{stratum}{vector specifying different groups of individuals for a
+stratified Cox regression. In \code{CoxBoost} fit each group gets its own
+baseline hazard.}
+
 \item{stepno}{number of boosting steps (\code{m}).}
 
 \item{penalty}{penalty value for the update of an individual element of the
@@ -67,6 +71,8 @@ or if different penalties are used for different covariates.
 \code{"score"}. However, a heuristic is used for evaluating only a subset of
 covariates in each boosting step, as described in Binder et al. (2011). This
 can considerably speed up computation, but may lead to different results.}
+
+\item{cmprsk}{type of competing risk, specific hazards or cause-specific}
 
 \item{stepsize.factor}{determines the step-size modification factor by which
 the natural step size of boosting steps should be changed after a covariate

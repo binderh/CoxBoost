@@ -271,6 +271,7 @@ stabtrajec<-function(RIF,mix.list=c(0.001,0.01, 0.05, 0.1, 0.25, 0.35, 0.5, 0.7,
 
 #' @export
 #' @rdname stabtrajec
+#' @param method passed to \code{\link{hclust}} for the the agglomeration method to be used
 weightfreqmap<-function(RIF,mix.list=c(0.001, 0.01, 0.05, 0.1, 0.25, 0.35, 0.5, 0.7, 0.9, 0.99)
                         ,plotmix=c(0.001, 0.01, 0.05, 0.1, 0.25, 0.35, 0.5, 0.7, 0.9, 0.99)
                         ,lowerRIFlimit=0.5,method="complete")

@@ -34,6 +34,12 @@ only wanted for the training data, i.e., \code{newdata=NULL}.}
 \item{subset}{an optional vector specifying a subset of observations to be
 used for evaluation.}
 
+\item{weights}{weights for each time.}
+
+\item{stratum}{vector specifying different groups of individuals for a
+stratified Cox regression. In \code{CoxBoost} fit each group gets its own
+baseline hazard.}
+
 \item{at.step}{scalar or vector of boosting step(s) at which prediction is
 wanted. If \code{type="risk"} is used, only one step is admissible. If no
 step is given, the final boosting step is used.}

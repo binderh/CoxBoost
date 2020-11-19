@@ -47,6 +47,8 @@ efron.weightmat <- function(time,status,cause.code,weights=NULL,prune.times=FALS
     weightmat
 }
 
+#' @useDynLib CoxBoost find_best_candidate get_I_vec
+
 find.best <- function(x.double.vec,n,p,uncens.C,uncens,
                       actual.beta,actual.risk.score,actual.linear.predictor,
                       weight.double.vec,max.nz.vec,max.1.vec,
@@ -87,7 +89,7 @@ find.best <- function(x.double.vec,n,p,uncens.C,uncens,
             beta.delta.vec=double(p),
             U.vec=double(p),
             I.vec=double(p),
-            DUP=FALSE,NAOK=TRUE
+            NAOK=TRUE
             )
 
     if (heuristic && !is.null(presel.index) && actual.step > 1) {
@@ -111,6 +113,7 @@ find.best <- function(x.double.vec,n,p,uncens.C,uncens,
                     max.1.vec,
                     as.double(weightmat.times.risk),
                     as.double(weightmat.times.risk.sum),
+                    as.integer(weight.time.dependent),
                     as.double(penalty),
                     as.integer(criterion == "pscore"),
                     as.integer(new.candidates - 1),
@@ -123,7 +126,7 @@ find.best <- function(x.double.vec,n,p,uncens.C,uncens,
                     beta.delta.vec=double(p),
                     U.vec=double(p),
                     I.vec=double(p),
-                    DUP=FALSE,NAOK=TRUE
+                    NAOK=TRUE
                     )
 
         }
@@ -187,8 +190,7 @@ update.penalty <- function(penalty,sf.scheme,actual.stepsize.factor,
                   as.integer(length(uncens)),
                   as.double(weightmat.times.risk),
                   as.double(weightmat.times.risk.sum),
-                  I.vec=double(length(I.index)),
-                  DUP=FALSE
+                  I.vec=double(length(I.index))
                   )$I.vec
 
         old.penalty <- penalty[min.index]
@@ -334,6 +336,11 @@ update.penalty <- function(penalty,sf.scheme,actual.stepsize.factor,
 #' memory) when the number of covariates and boosting steps is large.
 #' @param trace logical value indicating whether progress in estimation should
 #' be indicated by printing the name of the covariate updated.
+#' @param cmprsk type of competing risk, specific hazards or cause-specific
+#' @param stratum vector specifying different groups of individuals for a
+#' stratified Cox regression. In \code{CoxBoost} fit each group gets its own
+#' baseline hazard.
+#'
 #' @return \code{CoxBoost} returns an object of class \code{CoxBoost}.
 #'
 #' \item{n, p}{number of observations and number of covariates.}
@@ -1251,6 +1258,10 @@ coef.CoxBoost <- function(object,at.step=NULL,scaled=TRUE,...) {
 #' given in \code{times}, and \code{"CIF"} the predicted cumulative incidence
 #' function, i.e., the predicted probability of having had the event of
 #' interest.
+#' @param weights weights for each time.
+#' @param stratum vector specifying different groups of individuals for a
+#' stratified Cox regression. In \code{CoxBoost} fit each group gets its own
+#' baseline hazard.
 #' @param \dots miscellaneous arguments, none of which is used at the moment.
 #' @return For \code{type="lp"} and \code{type="logplik"} a vector of length
 #' \code{n.new} (\code{at.step} being a scalar) or a \code{n.new *
@@ -1613,8 +1624,13 @@ predict.CoxBoost <- function(object,newdata=NULL,newtime=NULL,newstatus=NULL,sub
 #' @param trace logical value indicating whether progress in estimation should
 #' be indicated by printing the number of the cross-validation fold and the
 #' index of the covariate updated.
+#' @param cmprsk type of competing risk, specific hazards or cause-specific
+#' @param weights weights to be passed to \code{\link{predict}}
 #' @param \dots miscellaneous parameters for the calls to
 #' \code{\link{CoxBoost}}
+#' @param stratum vector specifying different groups of individuals for a
+#' stratified Cox regression. In \code{CoxBoost} fit each group gets its own
+#' baseline hazard.
 #' @return List with the following components: \item{mean.logplik}{vector of
 #' length \code{maxstepno+1} with the mean partial log-likelihood for boosting
 #' steps \code{0} to \code{maxstepno}} \item{se.logplik}{vector with standard

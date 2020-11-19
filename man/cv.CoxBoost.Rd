@@ -38,6 +38,12 @@ fitted (see e.g. Fine and Gray, 1999).}
 \item{subset}{a vector specifying a subset of observations to be used in the
 fitting process.}
 
+\item{weights}{weights to be passed to \code{\link{predict}}}
+
+\item{stratum}{vector specifying different groups of individuals for a
+stratified Cox regression. In \code{CoxBoost} fit each group gets its own
+baseline hazard.}
+
 \item{maxstepno}{maximum number of boosting steps to evaluate, i.e, the
 returned ``optimal'' number of boosting steps will be in the range
 \code{[0,maxstepno]}.}
@@ -51,6 +57,8 @@ observation in the hold-out folds: \code{"verweij"} uses the more
 appropriate method described in Verweij and van Houwelingen (1996),
 \code{"naive"} uses the approach where the observations that are not in the
 hold-out folds are ignored (often found in other R packages).}
+
+\item{cmprsk}{type of competing risk, specific hazards or cause-specific}
 
 \item{parallel}{logical value indicating whether computations in the
 cross-validation folds should be performed in parallel on a compute cluster,
