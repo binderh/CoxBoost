@@ -1,8 +1,8 @@
 optimStepSizeFactor <- function(time,status,x,direction=c("down","up","both"),start.stepsize=0.1,iter.max=10,
-                                constant.cv.res=NULL,parallel=FALSE,trace=FALSE,...) 
+                                constant.cv.res=NULL,parallel=FALSE,trace=FALSE,...)
 {
     if (parallel) {
-        if (!require(snowfall)) {
+        if (!requireNamespace("snowfall")) {
             parallel <- FALSE
             warning("package 'snowfall' not found, i.e., parallelization cannot be performed")
         } else {
@@ -29,7 +29,7 @@ optimStepSizeFactor <- function(time,status,x,direction=c("down","up","both"),st
     while (i <= length(factor.list) && iter.count < iter.max) {
         iter.count <- iter.count + 1
         if (trace) cat("iteration ",iter.count,": evaluating factor ",factor.list[i],"\n",sep="")
-        
+
         if (factor.list[i] == 1 && !is.null(constant.cv.res)) {
             cv.res.act.path <- constant.cv.res
         } else {
@@ -43,7 +43,7 @@ optimStepSizeFactor <- function(time,status,x,direction=c("down","up","both"),st
         critmat <- rbind(critmat,cv.res.act.path$mean.logplik)
 
         if (is.null(folds)) folds <- cv.res.act.path$folds
-    
+
         i <- i + 1
         if (i > length(factor.list)) {
             if (reduction.done) break
@@ -63,12 +63,12 @@ optimStepSizeFactor <- function(time,status,x,direction=c("down","up","both"),st
                 factor.list <- c(factor.list,max(factor.list)+step.size)
                 do.reduction <- FALSE
             }
-            
+
             if (do.reduction) {
                 sort.factor.list <- sort(factor.list)
                 max.pos <- which(sort.factor.list == factor.list[actual.max])
                 max.factor <- sort.factor.list[max.pos]
-                
+
                 if (max.pos == 1) {
                     second.max.pos <- 2
                 } else {
@@ -85,18 +85,18 @@ optimStepSizeFactor <- function(time,status,x,direction=c("down","up","both"),st
                         }
                     }
                 }
-                
+
                 second.max.factor <- sort.factor.list[second.max.pos]
-                
+
                 factor.list <- c(factor.list,mean(c(max.factor,second.max.factor)))
-        
+
                 reduction.done <- TRUE
             }
         }
     }
 
     optimal.factor.index <- which.max(apply(critmat,1,max))
-    
+
     list(factor.list=factor.list,
          critmat=critmat,
          optimal.factor.index=optimal.factor.index,
