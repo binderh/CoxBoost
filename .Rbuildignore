@@ -1,3 +1,5 @@
 ^CoxBoost\.Rproj$
 ^\.Rproj\.user$
 ^changeLog$
+^README\.Rmd$
+^CODE_OF_CONDUCT\.md$

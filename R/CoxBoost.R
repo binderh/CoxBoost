@@ -417,12 +417,6 @@ update.penalty <- function(penalty,sf.scheme,actual.stepsize.factor,
 #'                        stepno=100,penalty=100)
 #' summary(cbfit.mand)
 #'
-#'
-#' @import Matrix
-#' @import prodlim
-#' @import survival
-#' @importFrom graphics abline axis legend lines points text
-#' @importFrom stats as.dist cor hclust heatmap model.frame model.matrix model.response pchisq predict sd terms
 #' @export
 CoxBoost <- function(time,status,x,unpen.index=NULL,standardize=TRUE,subset=1:length(time),
                      weights=NULL,stratum=NULL,stepno=100,penalty=9*sum(status[subset]==1),
