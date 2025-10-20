@@ -212,7 +212,6 @@ cbfit.mand <- CoxBoost(time=obs.time,status=status,x=x,unpen.index=c(1,2),
                        stepno=100,penalty=100)
 summary(cbfit.mand)
 
-
 }
 \references{
 Binder, H., Benner, A., Bullinger, L., and Schumacher, M.
