@@ -179,7 +179,7 @@ cvcb.control <- function(K=10,type=c("verweij","naive"),parallel=FALSE,upload.x=
 #' Bioinformatics. 9:14.
 #'
 #' Tutz, G. and Binder, H. (2007) Boosting ridge regression. Computational
-#' Statistics \& Data Analysis, 51(12):6044-6059.
+#' Statistics & Data Analysis, 51(12):6044-6059.
 #'
 #' Fine, J. P. and Gray, R. J. (1999). A proportional hazards model for the
 #' subdistribution of a competing risk. Journal of the American Statistical
@@ -252,7 +252,7 @@ iCoxBoost <- function(formula,data=NULL,weights=NULL,subset=NULL,
     }
 
     actual.time <- as.numeric(response[,"time"])
-    if (class(response) == "Hist") {
+    if (inherits(response, "Hist")) {
         if (cmprsk == "sh") {
             actual.status <- rep(2,NROW(response))
             actual.status[as.numeric(response[,"event"] == cause) == 1] <- 1
@@ -442,7 +442,7 @@ predict.iCoxBoost <- function(object,newdata=NULL,subset=NULL,at.step=NULL,times
 			new.response <- model.response(model.frame(object$formula,newdata))
 			newtime <- as.numeric(new.response[,"time"])
 
-			if (class(new.response) == "Hist") {
+			if (inherits(new.response, "Hist")) {
 			    if (length(object$causes) > 1) {
                     newstatus <- new.response[,"event"]
                     newstatus[as.numeric(new.response[,"status"]) == 0] <- 0

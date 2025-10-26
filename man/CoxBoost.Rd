@@ -74,6 +74,14 @@ can considerably speed up computation, but may lead to different results.}
 
 \item{cmprsk}{type of competing risk, specific hazards or cause-specific}
 
+\item{coupled.strata}{logical value indicating whether strata should be
+coupled during variable selection in each boosting step. If \code{TRUE}
+(default), the same covariate is selected and updated simultaneously across
+all strata, assuming proportional effects between strata. If \code{FALSE},
+strata are treated independently during selection, allowing stratum-specific
+updates (only relevant when multiple strata are defined and
+\code{criterion} is set to \code{"hscore"} or \code{"hpscore"}).}
+
 \item{stepsize.factor}{determines the step-size modification factor by which
 the natural step size of boosting steps should be changed after a covariate
 has been selected in a boosting step. The default (value \code{1}) implies
@@ -232,7 +240,7 @@ boosting estimation of sparse high-dimensional survival models. BMC
 Bioinformatics. 9:14.
 
 Tutz, G. and Binder, H. (2007) Boosting ridge regression. Computational
-Statistics \& Data Analysis, 51(12):6044-6059.
+Statistics & Data Analysis, 51(12):6044-6059.
 
 Fine, J. P. and Gray, R. J. (1999). A proportional hazards model for the
 subdistribution of a competing risk. Journal of the American Statistical
