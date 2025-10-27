@@ -47,8 +47,6 @@ efron.weightmat <- function(time,status,cause.code,weights=NULL,prune.times=FALS
     weightmat
 }
 
-#' @useDynLib CoxBoost find_best_candidate get_I_vec
-
 find.best <- function(x.double.vec,n,p,uncens.C,uncens,
                       actual.beta,actual.risk.score,actual.linear.predictor,
                       weight.double.vec,max.nz.vec,max.1.vec,
@@ -89,7 +87,8 @@ find.best <- function(x.double.vec,n,p,uncens.C,uncens,
             beta.delta.vec=double(p),
             U.vec=double(p),
             I.vec=double(p),
-            NAOK=TRUE
+            NAOK=TRUE,
+            PACKAGE="CoxBoost"
             )
 
     if (heuristic && !is.null(presel.index) && actual.step > 1) {
@@ -126,7 +125,8 @@ find.best <- function(x.double.vec,n,p,uncens.C,uncens,
                     beta.delta.vec=double(p),
                     U.vec=double(p),
                     I.vec=double(p),
-                    NAOK=TRUE
+                    NAOK=TRUE,
+                    PACKAGE="CoxBoost"
                     )
 
         }
@@ -190,7 +190,8 @@ update.penalty <- function(penalty,sf.scheme,actual.stepsize.factor,
                   as.integer(length(uncens)),
                   as.double(weightmat.times.risk),
                   as.double(weightmat.times.risk.sum),
-                  I.vec=double(length(I.index))
+                  I.vec=double(length(I.index)),
+                  PACKAGE="CoxBoost"
                   )$I.vec
 
         old.penalty <- penalty[min.index]

@@ -1,6 +1,9 @@
+#' @useDynLib CoxBoost, .registration = TRUE
+NULL
+
 #' @import Matrix
-#' @import survival
-#' @import prodlim
+#' @importFrom survival Surv survfit
+#' @importFrom prodlim Hist
 # Is prodlim used?
 # CHECK the ones below one-by-one!!!
 #' @importFrom graphics abline axis legend lines points text
