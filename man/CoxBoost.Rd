@@ -137,7 +137,7 @@ extracted from \code{x} or names following the scheme \code{V1, V2, ...}}
 are used. \item{coefficients}{\code{(stepno+1) * p} matrix containing the
 coefficient estimates for the (standardized) optional covariates for
 boosting steps \code{0} to \code{stepno}. This will typically be a sparse
-matrix, built using package \code{\link{Matrix}}}.
+matrix, built using package \code{\link[Matrix]{Matrix}}.}
 \item{scoremat}{\code{stepno * p} matrix containing the value of the score
 statistic for each of the optional covariates before each boosting step.}
 \item{meanx, sdx}{vector of mean values and standard deviations used for
