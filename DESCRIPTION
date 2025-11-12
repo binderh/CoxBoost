@@ -15,10 +15,10 @@ Depends:
     R (>= 3.6.0)
 Imports:
     Matrix,
-    prodlim,
     survival
 Suggests:
     parallel,
+    prodlim,
     snowfall
 Encoding: UTF-8
 RoxygenNote: 7.3.3

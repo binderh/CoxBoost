@@ -252,7 +252,7 @@ iCoxBoost <- function(formula,data=NULL,weights=NULL,subset=NULL,
     }
 
     actual.time <- as.numeric(response[,"time"])
-    if (inherits(response, "Hist")) {
+    if (requireNamespace("prodlim", quietly = TRUE) && inherits(response, "Hist")) {
         if (cmprsk == "sh") {
             actual.status <- rep(2,NROW(response))
             actual.status[as.numeric(response[,"event"] == cause) == 1] <- 1
