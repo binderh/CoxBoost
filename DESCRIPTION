@@ -10,7 +10,7 @@ Authors@R: c(
   )
 Description: Provides routines for fitting Cox models by likelihood based
     boosting for a single endpoint or in presence of competing risks.
-License: GPL-2
+License: MIT + file LICENSE
 Depends:
     R (>= 3.6.0)
 Imports:
