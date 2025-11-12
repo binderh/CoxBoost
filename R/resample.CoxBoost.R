@@ -259,13 +259,13 @@ stabtrajec<-function(RIF,mix.list=c(0.001,0.01, 0.05, 0.1, 0.25, 0.35, 0.5, 0.7,
   jitmat<-jitmat[,which(colnames(jitmat)%in%paste("",plotmix,sep=""))]
   plot(0,xlim=c(0.5,length(which(sel.mask==T))+legendval),ylim=c(0,yupperlim),type="n",main=" ",
        xlab=" ",ylab="resampling inclusion frequency", las=T,xaxt = "n")
-  axis(1, at = c(1:length(which(sel.mask==T))),labels =rownames(freqmat[sel.mask,]),cex.axis=huge)
-  for (i in 1:length(plotmix)){ points(jitmat[,i],freqmat[,i][sel.mask],col=my.colors[i],type = 'p',pch=16)}
-  for (i in 1:length(plotmix)){ points(jitmat[,i],freqmat[,i][sel.mask],col=1,type = 'p')}
-  for (i in c(1:length(which(sel.mask==T)))){lines(jitmat[i,],freqmat[sel.mask,][i,],col=1)}
-  for (i in 1:length(plotmix)) {legend("topright",paste("w=",plotmix, sep=""),pch=16,col=my.colors,bty="n")}
-  for (i in 1:length(plotmix)) {legend("topright",paste("w=",plotmix, sep=""),pch=1,col=1,bty="n")}
-  abline(v=c(1:length(which(sel.mask==T))), col=grDevices::gray(0.7))
+  graphics::axis(1, at = c(1:length(which(sel.mask==T))),labels =rownames(freqmat[sel.mask,]),cex.axis=huge)
+  for (i in 1:length(plotmix)){ points(jitmat[,i],freqmat[,i][sel.mask],col=my.colors[i],type = 'p',pch=16) }
+  for (i in 1:length(plotmix)){ points(jitmat[,i],freqmat[,i][sel.mask],col=1,type = 'p') }
+  for (i in c(1:length(which(sel.mask==T)))){ graphics::lines(jitmat[i,],freqmat[sel.mask,][i,],col=1) }
+  for (i in 1:length(plotmix)) { graphics::legend("topright",paste("w=",plotmix, sep=""),pch=16,col=my.colors,bty="n") }
+  for (i in 1:length(plotmix)) { graphics::legend("topright",paste("w=",plotmix, sep=""),pch=1,col=1,bty="n") }
+  graphics::abline(v=c(1:length(which(sel.mask==T))), col=grDevices::gray(0.7))
 }
 
 

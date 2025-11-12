@@ -1145,11 +1145,11 @@ plot.CoxBoost <- function(x,line.col="dark grey",label.cex=0.6,xlab=NULL,ylab=NU
 
             plot(1,type="n",xlim=actual.xlim,ylim=ylim,xlab=xlab,ylab=ylab,main=actual.main,...)
 
-            if (length(nz.index[[i]]) < ncoef - length(x$unpen.index)) lines(c(0,nrow(plotmat[[i]])-1),c(0,0),col=line.col)
+            if (length(nz.index[[i]]) < ncoef - length(x$unpen.index)) graphics::lines(c(0,nrow(plotmat[[i]])-1),c(0,0),col=line.col)
 
             for (coef.index in 1:ncol(plotmat[[i]])) {
-                lines(0:(nrow(plotmat[[i]])-1),plotmat[[i]][,coef.index],col=line.col)
-                text(actual.xlim[2],plotmat[[i]][nrow(plotmat[[i]]),coef.index],plot.names[[i]][coef.index],pos=2,cex=label.cex)
+              graphics::lines(0:(nrow(plotmat[[i]])-1),plotmat[[i]][,coef.index],col=line.col)
+              graphics::text(actual.xlim[2],plotmat[[i]][nrow(plotmat[[i]]),coef.index],plot.names[[i]][coef.index],pos=2,cex=label.cex)
             }
         }
     }
