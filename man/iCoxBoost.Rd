@@ -199,7 +199,7 @@ boosting estimation of sparse high-dimensional survival models. BMC
 Bioinformatics. 9:14.
 
 Tutz, G. and Binder, H. (2007) Boosting ridge regression. Computational
-Statistics \& Data Analysis, 51(12):6044-6059.
+Statistics & Data Analysis, 51(12):6044-6059.
 
 Fine, J. P. and Gray, R. J. (1999). A proportional hazards model for the
 subdistribution of a competing risk. Journal of the American Statistical

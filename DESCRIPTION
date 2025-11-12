@@ -1,16 +1,24 @@
 Package: CoxBoost
-Version: 1.5
-Title: Cox Models by Likelihood Based Boosting for a Single Survival Endpoint or Competing Risks
-Author: Harald Binder <binderh@uni-mainz.de>
-Maintainer: Harald Binder <binderh@uni-mainz.de>
-Depends: R (>= 2.14.0), survival, Matrix, prodlim
-Suggests: parallel, snowfall
-Imports: 
-  stats,
-  grDevices,
-  graphics
-Description: Provides routines for fitting Cox models by likelihood based 
-  boosting for a single endpoint or in presence of competing risks.
-License: GPL-2
-RoxygenNote: 7.1.1
+Title: Cox Models by Likelihood Based Boosting for a Single Survival
+    Endpoint or Competing Risks
+Version: 1.5.1
+Authors@R: c(
+    person("John", "Zobolas", , "bblodfon@gmail.com", role = c("cre", "aut"),
+           comment = c(ORCID = "0000-0002-3609-8674")),
+    person("Harald", "Binder", , "harald.binder@uniklinik-freiburg.de", role = "aut",
+           comment = c(ORCID = "0000-0002-5666-8662"))
+  )
+Description: Provides routines for fitting Cox models by likelihood based
+    boosting for a single endpoint or in presence of competing risks.
+License: MIT + file LICENSE
+Depends:
+    R (>= 3.6.0)
+Imports:
+    Matrix,
+    survival
+Suggests:
+    parallel,
+    prodlim,
+    snowfall
 Encoding: UTF-8
+RoxygenNote: 7.3.3

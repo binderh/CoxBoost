@@ -47,8 +47,6 @@ efron.weightmat <- function(time,status,cause.code,weights=NULL,prune.times=FALS
     weightmat
 }
 
-#' @useDynLib CoxBoost find_best_candidate get_I_vec
-
 find.best <- function(x.double.vec,n,p,uncens.C,uncens,
                       actual.beta,actual.risk.score,actual.linear.predictor,
                       weight.double.vec,max.nz.vec,max.1.vec,
@@ -89,7 +87,8 @@ find.best <- function(x.double.vec,n,p,uncens.C,uncens,
             beta.delta.vec=double(p),
             U.vec=double(p),
             I.vec=double(p),
-            NAOK=TRUE
+            NAOK=TRUE,
+            PACKAGE="CoxBoost"
             )
 
     if (heuristic && !is.null(presel.index) && actual.step > 1) {
@@ -126,7 +125,8 @@ find.best <- function(x.double.vec,n,p,uncens.C,uncens,
                     beta.delta.vec=double(p),
                     U.vec=double(p),
                     I.vec=double(p),
-                    NAOK=TRUE
+                    NAOK=TRUE,
+                    PACKAGE="CoxBoost"
                     )
 
         }
@@ -190,7 +190,8 @@ update.penalty <- function(penalty,sf.scheme,actual.stepsize.factor,
                   as.integer(length(uncens)),
                   as.double(weightmat.times.risk),
                   as.double(weightmat.times.risk.sum),
-                  I.vec=double(length(I.index))
+                  I.vec=double(length(I.index)),
+                  PACKAGE="CoxBoost"
                   )$I.vec
 
         old.penalty <- penalty[min.index]
@@ -337,6 +338,13 @@ update.penalty <- function(penalty,sf.scheme,actual.stepsize.factor,
 #' @param trace logical value indicating whether progress in estimation should
 #' be indicated by printing the name of the covariate updated.
 #' @param cmprsk type of competing risk, specific hazards or cause-specific
+#' @param coupled.strata logical value indicating whether strata should be
+#' coupled during variable selection in each boosting step. If \code{TRUE}
+#' (default), the same covariate is selected and updated simultaneously across
+#' all strata, assuming proportional effects between strata. If \code{FALSE},
+#' strata are treated independently during selection, allowing stratum-specific
+#' updates (only relevant when multiple strata are defined and
+#' \code{criterion} is set to \code{"hscore"} or \code{"hpscore"}).
 #' @param stratum vector specifying different groups of individuals for a
 #' stratified Cox regression. In \code{CoxBoost} fit each group gets its own
 #' baseline hazard.
@@ -350,7 +358,7 @@ update.penalty <- function(penalty,sf.scheme,actual.stepsize.factor,
 #' are used. \item{coefficients}{\code{(stepno+1) * p} matrix containing the
 #' coefficient estimates for the (standardized) optional covariates for
 #' boosting steps \code{0} to \code{stepno}. This will typically be a sparse
-#' matrix, built using package \code{\link{Matrix}}}.
+#' matrix, built using package \code{\link[Matrix]{Matrix}}.}
 #' \item{scoremat}{\code{stepno * p} matrix containing the value of the score
 #' statistic for each of the optional covariates before each boosting step.}
 #' \item{meanx, sdx}{vector of mean values and standard deviations used for
@@ -389,7 +397,7 @@ update.penalty <- function(penalty,sf.scheme,actual.stepsize.factor,
 #' Bioinformatics. 9:14.
 #'
 #' Tutz, G. and Binder, H. (2007) Boosting ridge regression. Computational
-#' Statistics \& Data Analysis, 51(12):6044-6059.
+#' Statistics & Data Analysis, 51(12):6044-6059.
 #'
 #' Fine, J. P. and Gray, R. J. (1999). A proportional hazards model for the
 #' subdistribution of a competing risk. Journal of the American Statistical
@@ -417,12 +425,6 @@ update.penalty <- function(penalty,sf.scheme,actual.stepsize.factor,
 #'                        stepno=100,penalty=100)
 #' summary(cbfit.mand)
 #'
-#'
-#' @import Matrix
-#' @import prodlim
-#' @import survival
-#' @importFrom graphics abline axis legend lines points text
-#' @importFrom stats as.dist cor hclust heatmap model.frame model.matrix model.response pchisq predict sd terms
 #' @export
 CoxBoost <- function(time,status,x,unpen.index=NULL,standardize=TRUE,subset=1:length(time),
                      weights=NULL,stratum=NULL,stepno=100,penalty=9*sum(status[subset]==1),
@@ -723,7 +725,7 @@ CoxBoost <- function(time,status,x,unpen.index=NULL,standardize=TRUE,subset=1:le
                         }
 
                         try.res <- try(unpen.beta.delta <- drop(solve(I) %*% U),silent=TRUE)
-                        if (class(try.res) == "try-error") {
+                        if (inherits(try.res, "try-error")) {
                             model[[model.index]]$unpen.warn <- actual.step
                             if (actual.step == 0) {
                                 model[[model.index]]$unpen.coefficients[actual.step+1,] <- 0
@@ -1143,11 +1145,11 @@ plot.CoxBoost <- function(x,line.col="dark grey",label.cex=0.6,xlab=NULL,ylab=NU
 
             plot(1,type="n",xlim=actual.xlim,ylim=ylim,xlab=xlab,ylab=ylab,main=actual.main,...)
 
-            if (length(nz.index[[i]]) < ncoef - length(x$unpen.index)) lines(c(0,nrow(plotmat[[i]])-1),c(0,0),col=line.col)
+            if (length(nz.index[[i]]) < ncoef - length(x$unpen.index)) graphics::lines(c(0,nrow(plotmat[[i]])-1),c(0,0),col=line.col)
 
             for (coef.index in 1:ncol(plotmat[[i]])) {
-                lines(0:(nrow(plotmat[[i]])-1),plotmat[[i]][,coef.index],col=line.col)
-                text(actual.xlim[2],plotmat[[i]][nrow(plotmat[[i]]),coef.index],plot.names[[i]][coef.index],pos=2,cex=label.cex)
+              graphics::lines(0:(nrow(plotmat[[i]])-1),plotmat[[i]][,coef.index],col=line.col)
+              graphics::text(actual.xlim[2],plotmat[[i]][nrow(plotmat[[i]]),coef.index],plot.names[[i]][coef.index],pos=2,cex=label.cex)
             }
         }
     }
