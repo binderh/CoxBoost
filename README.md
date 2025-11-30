@@ -26,10 +26,12 @@ You can install the development version of CoxBoost from
 pak::pak("binderh/CoxBoost")
 ```
 
-## Example
+## Examples
 
-This is a basic example which shows you how to fit a `CoxBoost` model
+We provide two basic examples which show how to fit a `CoxBoost` model
 and predict on new data.
+
+### Single-event data
 
 First, we generate some survival data with 10 informative covariates and
 define the train and test sets:
@@ -126,3 +128,94 @@ summary(cbfit_mand)
     #    Estimate
     # V1   0.9673
     # V2   0.9816
+
+### Competing risks data
+
+We use the `bpc` dataset from the `survival` package, perform a simple
+trian/test split and fit a cause-specific hazard CoxBoost model:
+
+``` r
+library(survival)
+
+# Use the pbc dataset from survival package
+data(pbc)
+# Create a competing risks variable: 0=censored, 1=death, 2=transplant
+pbc$status2 = with(pbc, ifelse(status == 0, 0, ifelse(status == 1, 1, 2)))
+pbc$sex = with(pbc, ifelse(sex == "m", 0, 1)) # CoxBoost doesn't support factors
+
+# Keep only complete cases for simplicity
+pbc2 = na.omit(pbc[, c("time", "status2", "age", "sex", "bili")])
+
+# Train/test split
+set.seed(42)
+train_index = 1:300 # 300
+test_index  = 301:nrow(pbc2) # 118
+
+# Fit CoxBoost with cause-specific hazards
+fit = CoxBoost(
+  time    = pbc2$time[train_index],
+  status  = pbc2$status2[train_index],
+  x       = as.matrix(pbc2[train_index, c("age", "sex", "bili")]),
+  stepno  = 300,
+  penalty = 100,
+  cmprsk  = "csh" # cause-specific hazards
+)
+```
+
+Summary of the trained model:
+
+``` r
+summary(fit)
+```
+
+    # cause '1':
+    # 300 boosting steps resulting in 3 non-zero coefficients  
+    # partial log-likelihood: -90.05802 
+    # 
+    # parameter estimates > 0:
+    #  bili 
+    # parameter estimates < 0:
+    #  age, sex 
+    # 
+    # cause '2':
+    # 300 boosting steps resulting in 3 non-zero coefficients  
+    # partial log-likelihood: -584.9952 
+    # 
+    # parameter estimates > 0:
+    #  age, bili 
+    # parameter estimates < 0:
+    #  sex
+
+Predict CIFs on the test set using the unique, sorted event (by any
+cause) time points:
+
+``` r
+times = sort(pbc2$time[test_index][pbc2$status2[test_index] != 0])
+cif_pred = predict(
+  fit,
+  newdata = as.matrix(pbc2[test_index, c("age", "sex", "bili")]),
+  type = "CIF",
+  times = times
+)
+
+str(cif_pred)
+```
+
+    # List of 2
+    #  $ 1: num [1:118, 1:42] 1.58e-04 2.50e-04 4.08e-05 2.72e-04 2.28e-04 ...
+    #  $ 2: num [1:118, 1:42] 0.000914 0.000526 0.001873 0.00042 0.001082 ...
+
+The output prediction object is a list with two elements: one matrix for
+each cause (death and transplant), with the cumulative incidence
+function (CIF). Each matrix’s rows correspond to the test observations
+and the columns to the time points.
+
+We plot the CIF of the first cause and for the first 3 test patients:
+
+``` r
+matplot(times, t(cif_pred$`1`[1:3, ]), type = "l", lty = 1, col = 1:3,
+        xlab = "Time", ylab = "Cumulative Incidence (Cause 1)")
+legend("topleft", legend = 1:3, col = 1:3, lty = 1)
+```
+
+![](man/figures/README-unnamed-chunk-9-1.png)<!-- -->
