@@ -6,3 +6,5 @@
 ^CONTRIBUTING\.md$
 ^LICENSE\.md$
 .Rhistory
+^cran-comments\.md$
+^\.github$
