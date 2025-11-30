@@ -141,10 +141,11 @@ obs.time <- ifelse(real.time <= cens.time,real.time,cens.time)
 #   Fit a stratified weighted Cox proportional hazards model
 # by \code{resample.CoxBoost}
 
+mix.list=c(0.001, 0.01, 0.05, 0.1, 0.25, 0.35, 0.5, 0.7, 0.9, 0.99)
 RIF <- resample.CoxBoost(
-  time=obs.time,status=obs.status,x=x,rep=100,
+  time=obs.time,status=obs.status,x=x,rep=5, # use more repetitions (eg `rep = 100` for more stable results)
   maxstepno=200,multicore=FALSE,
-  mix.list=c(0.001, 0.01, 0.05, 0.1, 0.25, 0.35, 0.5, 0.7, 0.9, 0.99),
+  mix.list=mix.list,
   stratum=group,stratnotinfocus=0,penalty=sum(obs.status)*(1/0.02-1),
   criterion="hscore",unpen.index=NULL)
 
@@ -165,6 +166,10 @@ ncol=length(mix.list))
 #  freqmat is a matrix with p rows and \code{length(mix.list)} columns
 #  which contains resampling inclusion frequencies for the different
 #  covariates and different weights.
+
+# two plotting functions are available for the resulting object:
+stabtrajec(RIF)
+weightfreqmap(RIF)
 }
 }
 \references{
