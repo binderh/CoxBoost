@@ -6,10 +6,9 @@
 <img src="man/figures/warning.png" width = "42" /> This package is
 **under maintenance so that it is restored in CRAN**
 
-[Package website](TOADD)
-
 <!-- badges: start -->
 
+[![r-cmd-check](https://github.com/binderh/CoxBoost/actions/workflows/r-cmd-check.yml/badge.svg)](https://github.com/binderh/CoxBoost/actions/workflows/r-cmd-check.yml)
 [![CRAN
 Status](https://www.r-pkg.org/badges/version-ago/CoxBoost)](https://cran.r-project.org/package=CoxBoost)
 <!-- badges: end -->
