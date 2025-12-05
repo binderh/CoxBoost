@@ -11,6 +11,15 @@
 
 \item{...}{not used}
 }
+\value{
+Invisibly returns \code{NULL}. The function is called for its
+side-effects, printing for each cause–stratum combination:
+\itemize{
+  \item the number of boosting steps,
+  \item the number of non-zero coefficients,
+  \item the partial log-likelihood.
+}
+}
 \description{
 Print a CoxBoost type
 }

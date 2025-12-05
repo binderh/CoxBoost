@@ -1054,6 +1054,14 @@ joint.print <- function(x,long=FALSE) {
 #' @param x a CoxBoost object
 #' @param ... not used
 #' @method print CoxBoost
+#' @return
+#' Invisibly returns \code{NULL}. The function is called for its
+#' side-effects, printing for each cause–stratum combination:
+#' \itemize{
+#'   \item the number of boosting steps,
+#'   \item the number of non-zero coefficients,
+#'   \item the partial log-likelihood.
+#' }
 #' @export
 print.CoxBoost <- function(x,...) {
     joint.print(x,long=FALSE)
@@ -1063,6 +1071,17 @@ print.CoxBoost <- function(x,...) {
 #' @param object a CoxBoost object
 #' @param ... not used
 #' @method summary CoxBoost
+#' @return
+#' Invisibly returns \code{NULL}. The function is called for its
+#' side-effects, printing for each cause–stratum combination:
+#' \itemize{
+#'   \item the number of boosting steps and non-zero coefficients,
+#'   \item the partial log-likelihood,
+#'   \item the covariates with positive coefficients,
+#'   \item the covariates with negative coefficients,
+#'   \item and, if applicable, the coefficient estimates of mandatory
+#'         (unpenalized) covariates.
+#' }
 #' @export
 summary.CoxBoost <- function(object,...) {
     joint.print(object,long=TRUE)
