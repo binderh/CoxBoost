@@ -106,8 +106,8 @@ estimPVal <- function(object,x,permute.n=10,per.covariate=FALSE,parallel=FALSE,m
         permute.res <- CoxBoost(time=time,status=status,x=actual.x,unpen.index=unpen.index,
                                 standardize=FALSE,stepno=stepno,penalty=penalty,trace=FALSE,...)
 
-        actual.score <- colMeans(permute.res$scoremat[,1:length(pen.index),drop=FALSE])
-        null.score <- colMeans(permute.res$scoremat[,(length(pen.index)+1):ncol(permute.res$scoremat),drop=FALSE])
+        actual.score <- colMeans(permute.res$scoremat[,1:length(pen.index),drop=FALSE], na.rm = TRUE)
+        null.score <- colMeans(permute.res$scoremat[,(length(pen.index)+1):ncol(permute.res$scoremat),drop=FALSE], na.rm = TRUE)
 
         if (per.covariate) {
             return(actual.score <= null.score)
