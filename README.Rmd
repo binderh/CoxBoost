@@ -156,3 +156,41 @@ matplot(times, t(cif_pred$`1`[1:3, ]), type = "l", lty = 1, col = 1:3,
         xlab = "Time", ylab = "Cumulative Incidence (Cause 1)")
 legend("topleft", legend = 1:3, col = 1:3, lty = 1)
 ```
+
+# Citing CoxBoost
+
+If you apply `CoxBoost` to *single-event* survival data, please cite:
+```
+@article{Binder2008,
+  title = {{A}llowing for mandatory covariates in boosting estimation of sparse high-dimensional survival models},
+  author = {Harald Binder and Martin Schumacher},
+  doi = {10.1186/1471-2105-9-14},
+  issn = {14712105},
+  issue = {1},
+  journal = {BMC Bioinformatics},
+  month = {1},
+  pages = {1-10},
+  pmid = {18186927},
+  publisher = {BioMed Central},
+  volume = {9},
+  year = {2008}
+}
+```
+
+If you use `CoxBoost` for *competing risks* analyses, please cite:
+```
+@article{Binder2009,
+  title = {{B}oosting for high-dimensional time-to-event data with competing riks},
+  author = {Harald Binder and Arthur Allignol and Martin Schumacher and Jan Beersmann},
+  doi = {10.1093/BIOINFORMATICS/BTP088},
+  issn = {1367-4803},
+  issue = {7},
+  journal = {Bioinformatics},
+  month = {4},
+  pages = {890-896},
+  pmid = {19244389},
+  publisher = {Oxford Academic},
+  volume = {25},
+  year = {2009}
+}
+```

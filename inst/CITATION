@@ -1,0 +1,20 @@
+citHeader("Please cite the following when using CoxBoost:")
+
+bibentry(
+  bibtype = "Article",
+  title = "Allowing for mandatory covariates in boosting estimation of sparse high-dimensional survival models",
+  author = c(person("Harald", "Binder"), person("Martin", "Schumacher")),
+  journal = "BMC Bioinformatics",
+  year = "2008",
+  doi = "10.1186/1471-2105-9-14"
+)
+
+bibentry(
+  bibtype = "Article",
+  title = "Boosting for high-dimensional time-to-event data with competing risks",
+  author = c(person("Harald", "Binder"), person("Arthur", "Allignol"),
+             person("Martin", "Schumacher"), person("Jan", "Beersmann")),
+  journal = "Bioinformatics",
+  year = "2009",
+  doi = "10.1093/bioinformatics/btp088"
+)
