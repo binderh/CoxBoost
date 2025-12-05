@@ -1,4 +1,4 @@
-#' Control paramters for cross-validation in \code{iCoxBoost}
+#' Control parameters for cross-validation in \code{iCoxBoost}
 #'
 #' This function allows to set the control parameters for cross-validation to
 #' be passed into a call to \code{\link{iCoxBoost}}.

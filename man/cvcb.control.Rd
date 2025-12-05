@@ -2,7 +2,7 @@
 % Please edit documentation in R/iCoxBoost.R
 \name{cvcb.control}
 \alias{cvcb.control}
-\title{Control paramters for cross-validation in \code{iCoxBoost}}
+\title{Control parameters for cross-validation in \code{iCoxBoost}}
 \usage{
 cvcb.control(
   K = 10,
