@@ -122,7 +122,7 @@ indicated by the indices in \code{unpen.index}.
 }
 \examples{
 
-\dontrun{
+\donttest{
 # Generate survival data with five informative covariates for one subgroup
 n <- 400; p <- 1000
 set.seed(129)

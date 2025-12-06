@@ -47,7 +47,7 @@
 #' @keywords models regression survial
 #' @examples
 #'
-#' \dontrun{
+#' \donttest{
 #' #   Generate some survival data with 10 informative covariates
 #' n <- 200; p <- 100
 #' beta <- c(rep(1,10),rep(0,p-10))

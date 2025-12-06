@@ -1668,7 +1668,7 @@ predict.CoxBoost <- function(object,newdata=NULL,newtime=NULL,newstatus=NULL,sub
 #' @keywords models regression survial
 #' @examples
 #'
-#' \dontrun{
+#' \donttest{
 #' #   Generate some survival data with 10 informative covariates
 #' n <- 200; p <- 100
 #' beta <- c(rep(1,10),rep(0,p-10))
@@ -1875,7 +1875,7 @@ cv.CoxBoost <- function(time,status,x,subset=1:length(time),weights=NULL,stratum
 #' @keywords models smooth regression
 #' @examples
 #'
-#' \dontrun{
+#' \donttest{
 #' #   Generate some survival data with 10 informative covariates
 #' n <- 200; p <- 100
 #' beta <- c(rep(1,10),rep(0,p-10))

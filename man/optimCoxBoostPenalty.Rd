@@ -73,7 +73,7 @@ and so one should specify a rather large range of boosting steps.
 }
 \examples{
 
-\dontrun{
+\donttest{
 #   Generate some survival data with 10 informative covariates
 n <- 200; p <- 100
 beta <- c(rep(1,10),rep(0,p-10))
