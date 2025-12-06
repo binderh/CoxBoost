@@ -1,6 +1,6 @@
-# CoxBoost dev
+# CoxBoost 1.5.1
 
-* Updating package for CRAN release.
+* CRAN release.
 
 # CoxBoost 1.5
 
@@ -26,9 +26,9 @@
 
 # CoxBoost 1.2-2
 
-* Fixed a bug in the predict function ocurred when all coefficients
+* Fixed a bug in the predict function occurred when all coefficients
   were equal to zero
-* Fixed bug where `estimPVal` would with only one boosting step
+* Fixed bug where `estimPVal` with using only one boosting step
 * `estimPVal` now also works for zero boosting steps
 
 # CoxBoost 1.2-1
