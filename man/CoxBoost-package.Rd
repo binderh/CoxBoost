@@ -3,9 +3,9 @@
 \docType{package}
 \name{CoxBoost-package}
 \alias{CoxBoost-package}
-\title{CoxBoost: Provides routines for fitting Cox models by likelihood based boosting for single event survival data with right censoring or in the presence of competing risks. The methodology is described in Binder and Schumacher (2008) <doi:10.1186/1471-2105-9-14> and Binder et al. (2009) <doi:10.1093/bioinformatics/btp088>.}
+\title{CoxBoost: Cox Models by Likelihood Based Boosting for a Single Survival Endpoint or Competing Risks}
 \description{
-Provides routines for fitting Cox models by likelihood based boosting for a single endpoint or in presence of competing risks.
+Provides routines for fitting Cox models by likelihood based boosting for single event survival data with right censoring or in the presence of competing risks. The methodology is described in Binder and Schumacher (2008) \doi{10.1186/1471-2105-9-14} and Binder et al. (2009) \doi{10.1093/bioinformatics/btp088}.
 }
 \author{
 \strong{Maintainer}: John Zobolas \email{bblodfon@gmail.com} (\href{https://orcid.org/0000-0002-3609-8674}{ORCID})
