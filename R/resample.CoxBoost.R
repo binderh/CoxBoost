@@ -79,7 +79,8 @@
 #' penalty value in the log-partial likelihood function.
 #' @param trace logical value indicating whether progress in estimation should
 #' be indicated by printing the number of the cross-validation fold and the
-#' index of the covariate updated.
+#' index of the covariate updated in the \code{cv.CoxBoost} and \code{CoxBoost}
+#' methods.
 #' @return \code{resample.CoxBoost} returns a list of length \code{rep} list
 #' elements with each list element being further a list of the following two
 #' objects:
