@@ -193,13 +193,13 @@ resample.CoxBoost <- function(time,status,x,rep=100,maxstepno=200,multicore=TRUE
       obs.weights <- rep(1,length(status))
       case.weights <- ifelse(stratum == stratnotinfocus,mix.prop,1)
       obs.weights <- case.weights/sum(case.weights)*length(case.weights)
-      set.seed(x[1,5]*100+time[19]*10)
+
       CV <- cv.CoxBoost(time=time[trainind[[iter]]],status=status[trainind[[iter]]],x=x[trainind[[iter]],],
                         stratum=stratum[trainind[[iter]]],unpen.index=unpen.index,
                         coupled.strata = FALSE,weights=obs.weights[trainind[[iter]]],
                         maxstepno=maxstepno,K=10,penalty=penalty,
                         standardize=TRUE,trace=trace, multicore=multicore,criterion=criterion)
-      set.seed(x[1,5]*100+time[19]*10)
+
       CB <- CoxBoost(time=time[trainind[[iter]]],status=status[trainind[[iter]]],x=x[trainind[[iter]],],
                     stratum=stratum[trainind[[iter]]],unpen.index=unpen.index,
                     coupled.strata = FALSE,weights=obs.weights[trainind[[iter]]],
