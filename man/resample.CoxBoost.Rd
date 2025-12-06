@@ -17,7 +17,8 @@ resample.CoxBoost(
   stratnotinfocus = 0,
   penalty = sum(status) * (1/0.02 - 1),
   criterion = "hscore",
-  unpen.index = NULL
+  unpen.index = NULL,
+  trace = FALSE
 )
 }
 \arguments{
@@ -65,6 +66,10 @@ the different other options see \code{CoxBoost}.}
 
 \item{unpen.index}{index for mandatory covariates, which should get no
 penalty value in the log-partial likelihood function.}
+
+\item{trace}{logical value indicating whether progress in estimation should
+be indicated by printing the number of the cross-validation fold and the
+index of the covariate updated.}
 }
 \value{
 \code{resample.CoxBoost} returns a list of length \code{rep} list
