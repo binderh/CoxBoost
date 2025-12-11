@@ -1,7 +1,7 @@
 Package: CoxBoost
 Title: Cox Models by Likelihood Based Boosting for a Single Survival
     Endpoint or Competing Risks
-Version: 1.5.1
+Version: 1.5.1.9000
 Authors@R: c(
     person("John", "Zobolas", , "bblodfon@gmail.com", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0002-3609-8674")),
