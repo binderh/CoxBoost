@@ -15,6 +15,12 @@ tasks and competing risks.
 
 ## Installation
 
+Install the latest release from CRAN:
+
+``` r
+install.packages("CoxBoost")
+```
+
 You can install the development version of CoxBoost from
 [GitHub](https://github.com/binderh/CoxBoost/) with:
 

@@ -22,6 +22,12 @@ Cox-Likelihood Based Boosting for right-censored single-event survival tasks and
 
 ## Installation
 
+Install the latest release from CRAN:
+
+``` r
+install.packages("CoxBoost")
+```
+
 You can install the development version of CoxBoost from [GitHub](https://github.com/binderh/CoxBoost/) with:
 
 ``` r
