@@ -116,8 +116,7 @@
 #'
 #' Simon, R. (2002). Bayesian subset analysis: application to studying
 #' treatment-by-gender interactions. Statistics in medicine 21(19), 2909-16
-#' @keywords subgroup signature time-to-event endpoint weighted regression
-#' stratified Cox model
+#' @keywords subgroup signature time-to-event endpoint weighted regression stratified Cox model
 #' @examples
 #'
 #' \donttest{
