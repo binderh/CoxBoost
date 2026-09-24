@@ -1291,9 +1291,9 @@ coef.CoxBoost <- function(object,at.step=NULL,scaled=TRUE,...) {
 #' matrix with predicted probabilities at the specific time points is returned.
 #' For models with multiple causes, a named list with one result per cause is
 #' returned.
-#' @details For cause-specific hazard models, cumulative incidence is computed
-#' at the observed event times using a matrix-exponential update scheme. If
-#' \eqn{dH_k} is the cumulative-hazard increment for cause \eqn{k} and \eqn{dH = \sum_k dH_k},
+#' @details For cause-specific hazard models (\code{cmprsk = "csh"} or \code{cmprsk = "ccsh"}),
+#' cumulative incidence is computed at the observed event times using a matrix-exponential update scheme.
+#' If \eqn{dH_k} is the cumulative-hazard increment for cause \eqn{k} and \eqn{dH = \sum_k dH_k},
 #' the CIF increment is \eqn{S(t-) (1 - \exp(-dH)) dH_k / dH}, with zero
 #' increment when \eqn{dH = 0}. This corresponds to a piecewise-constant
 #' cause-specific hazard within each interval.  Consequently, each CIF is

@@ -70,9 +70,9 @@ Obtains predictions at specified boosting steps from a CoxBoost object
 fitted by \code{\link{CoxBoost}}.
 }
 \details{
-For cause-specific hazard models, cumulative incidence is computed
-at the observed event times using a matrix-exponential update scheme. If
-\eqn{dH_k} is the cumulative-hazard increment for cause \eqn{k} and \eqn{dH = \sum_k dH_k},
+For cause-specific hazard models (\code{cmprsk = "csh"} or \code{cmprsk = "ccsh"}),
+cumulative incidence is computed at the observed event times using a matrix-exponential update scheme.
+If \eqn{dH_k} is the cumulative-hazard increment for cause \eqn{k} and \eqn{dH = \sum_k dH_k},
 the CIF increment is \eqn{S(t-) (1 - \exp(-dH)) dH_k / dH}, with zero
 increment when \eqn{dH = 0}. This corresponds to a piecewise-constant
 cause-specific hazard within each interval.  Consequently, each CIF is

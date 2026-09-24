@@ -1,11 +1,10 @@
 # CoxBoost 1.5.2
 
 * Competing risks CIF prediction improvements:
-  * Fixed bug where CIF predictions where increasing for some time points.
+  * Fixed bug where CIF predictions where descreasing for some time points.
 Predictions now accumulate non-negative event-time probability increments instead of
 interpolating hazards and rescaling accumulated CIFs at each time point.
-  * Predictions retain matrix dimensions for a single observation
-or time point and support prediction before the first event.
+  * Predictions retain matrix dimensions for a single observation or time point and support prediction before the first event.
 
 # CoxBoost 1.5.1
 
