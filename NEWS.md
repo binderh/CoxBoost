@@ -1,3 +1,12 @@
+# CoxBoost 1.5.2
+
+* Competing risks CIF prediction improvements:
+  * Fixed bug where CIF predictions where increasing for some time points.
+Predictions now accumulate non-negative event-time probability increments instead of
+interpolating hazards and rescaling accumulated CIFs at each time point.
+  * Predictions retain matrix dimensions for a single observation
+or time point and support prediction before the first event.
+
 # CoxBoost 1.5.1
 
 * CRAN release.
@@ -65,7 +74,7 @@
 # CoxBoost 1.0-1
 
 * Implemented data adaptive rule for default penalty value
-* Fixed bug where output of the selected covariate would print the wrong name in 
+* Fixed bug where output of the selected covariate would print the wrong name in
   presence of unpenalized covariates
 * Boosting now starts a step 0, i.e., also the model before updating
   any of the coefficients of the penalized covariates is considered.
