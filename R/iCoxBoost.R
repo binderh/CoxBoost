@@ -187,7 +187,7 @@ cvcb.control <- function(K=10,type=c("verweij","naive"),parallel=FALSE,upload.x=
 #' @keywords models regression survial
 #' @examples
 #'
-#' #   Generate some survival data with 10 informative covariates
+#' # Generate some survival data with 10 informative covariates
 #' n <- 200; p <- 100
 #' beta <- c(rep(1,2),rep(0,p-2))
 #' x <- matrix(rnorm(n*p),n,p)
@@ -197,18 +197,16 @@ cvcb.control <- function(K=10,type=c("verweij","naive"),parallel=FALSE,upload.x=
 #' actual.data$status <- ifelse(real.time <= cens.time,1,0)
 #' actual.data$time <- ifelse(real.time <= cens.time,real.time,cens.time)
 #'
-#' #   Fit a Cox proportional hazards model by iCoxBoost
-#'
-#' \donttest{cbfit <- iCoxBoost(Surv(time,status) ~ .,data=actual.data)
+#' # Fit a Cox proportional hazards model by iCoxBoost
+#' \donttest{cbfit <- iCoxBoost(Surv(time,status) ~ .,data=actual.data, cv=cvcb.control(K = 3))
 #' summary(cbfit)
 #' plot(cbfit)}
 #'
-#' #   ... with covariates 1 and 2 being mandatory
-#'
-#' \donttest{cbfit.mand <- iCoxBoost(Surv(time,status) ~ .,data=actual.data,mandatory=c("V1"))
+#' # ... with covariates 1 and 2 being mandatory
+#' \donttest{cbfit.mand <- iCoxBoost(Surv(time,status) ~ .,data=actual.data,mandatory=c("V1"),
+#' cv=cvcb.control(K = 3))
 #' summary(cbfit.mand)
 #' plot(cbfit.mand)}
-#'
 #'
 #' @export
 iCoxBoost <- function(formula,data=NULL,weights=NULL,subset=NULL,

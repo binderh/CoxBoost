@@ -1660,7 +1660,7 @@ predict.CoxBoost <- function(object,newdata=NULL,newtime=NULL,newstatus=NULL,sub
 #' @examples
 #'
 #' \donttest{
-#' #   Generate some survival data with 10 informative covariates
+#' # Generate some survival data with 10 informative covariates
 #' n <- 200; p <- 100
 #' beta <- c(rep(1,10),rep(0,p-10))
 #' x <- matrix(rnorm(n*p),n,p)
@@ -1669,21 +1669,19 @@ predict.CoxBoost <- function(object,newdata=NULL,newtime=NULL,newstatus=NULL,sub
 #' status <- ifelse(real.time <= cens.time,1,0)
 #' obs.time <- ifelse(real.time <= cens.time,real.time,cens.time)
 #'
+#' # 5-fold cross-validation
+#' # increase `maxstepno` for more boosting steps
+#' cv.res <- cv.CoxBoost(time=obs.time,status=status,x=x,maxstepno=50,
+#'                       K=5,type="verweij",penalty=100)
 #'
-#' #  10-fold cross-validation
-#'
-#' cv.res <- cv.CoxBoost(time=obs.time,status=status,x=x,maxstepno=500,
-#'                       K=10,type="verweij",penalty=100)
-#'
-#' #   examine mean partial log-likelihood in the course of the boosting steps
+#' # examine mean partial log-likelihood in the course of the boosting steps
 #' plot(cv.res$mean.logplik)
 #'
-#' #   Fit with optimal number of boosting steps
+#' # Fit with optimal number of boosting steps
 #'
 #' cbfit <- CoxBoost(time=obs.time,status=status,x=x,stepno=cv.res$optimal.step,
 #'                   penalty=100)
 #' summary(cbfit)
-#'
 #' }
 #'
 #' @export
@@ -1867,7 +1865,7 @@ cv.CoxBoost <- function(time,status,x,subset=1:length(time),weights=NULL,stratum
 #' @examples
 #'
 #' \donttest{
-#' #   Generate some survival data with 10 informative covariates
+#' # Generate some survival data with 10 informative covariates
 #' n <- 200; p <- 100
 #' beta <- c(rep(1,10),rep(0,p-10))
 #' x <- matrix(rnorm(n*p),n,p)
@@ -1876,19 +1874,16 @@ cv.CoxBoost <- function(time,status,x,subset=1:length(time),weights=NULL,stratum
 #' status <- ifelse(real.time <= cens.time,1,0)
 #' obs.time <- ifelse(real.time <= cens.time,real.time,cens.time)
 #'
-#' #  determine penalty parameter
-#'
+#' # determine penalty parameter
 #' optim.res <- optimCoxBoostPenalty(time=obs.time,status=status,x=x,
-#'                                   trace=TRUE,start.penalty=500)
+#'                                   trace=TRUE,start.penalty=500,K=3)
 #'
-#' #   Fit with obtained penalty parameter and optimal number of boosting
-#' #   steps obtained by cross-validation
-#'
+#' # Fit with obtained penalty parameter and optimal number of boosting
+#' # steps obtained by cross-validation
 #' cbfit <- CoxBoost(time=obs.time,status=status,x=x,
 #'                   stepno=optim.res$cv.res$optimal.step,
 #'                   penalty=optim.res$penalty)
 #' summary(cbfit)
-#'
 #' }
 #'
 #' @export

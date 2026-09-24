@@ -74,7 +74,7 @@ and so one should specify a rather large range of boosting steps.
 \examples{
 
 \donttest{
-#   Generate some survival data with 10 informative covariates
+# Generate some survival data with 10 informative covariates
 n <- 200; p <- 100
 beta <- c(rep(1,10),rep(0,p-10))
 x <- matrix(rnorm(n*p),n,p)
@@ -83,19 +83,16 @@ cens.time <- rexp(n,rate=1/10)
 status <- ifelse(real.time <= cens.time,1,0)
 obs.time <- ifelse(real.time <= cens.time,real.time,cens.time)
 
-#  determine penalty parameter
-
+# determine penalty parameter
 optim.res <- optimCoxBoostPenalty(time=obs.time,status=status,x=x,
-                                  trace=TRUE,start.penalty=500)
+                                  trace=TRUE,start.penalty=500,K=3)
 
-#   Fit with obtained penalty parameter and optimal number of boosting
-#   steps obtained by cross-validation
-
+# Fit with obtained penalty parameter and optimal number of boosting
+# steps obtained by cross-validation
 cbfit <- CoxBoost(time=obs.time,status=status,x=x,
                   stepno=optim.res$cv.res$optimal.step,
                   penalty=optim.res$penalty)
 summary(cbfit)
-
 }
 
 }

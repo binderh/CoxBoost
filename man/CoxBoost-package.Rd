@@ -7,6 +7,14 @@
 \description{
 Provides routines for fitting Cox models by likelihood based boosting for single event survival data with right censoring or in the presence of competing risks. The methodology is described in Binder and Schumacher (2008) \doi{10.1186/1471-2105-9-14} and Binder et al. (2009) \doi{10.1093/bioinformatics/btp088}.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/binderh/CoxBoost}
+  \item Report bugs at \url{https://github.com/binderh/CoxBoost/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: John Zobolas \email{bblodfon@gmail.com} (\href{https://orcid.org/0000-0002-3609-8674}{ORCID})
 

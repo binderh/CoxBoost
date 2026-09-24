@@ -48,7 +48,7 @@
 #' @examples
 #'
 #' \donttest{
-#' #   Generate some survival data with 10 informative covariates
+#' # Generate some survival data with 10 informative covariates
 #' n <- 200; p <- 100
 #' beta <- c(rep(1,10),rep(0,p-10))
 #' x <- matrix(rnorm(n*p),n,p)
@@ -57,18 +57,15 @@
 #' status <- ifelse(real.time <= cens.time,1,0)
 #' obs.time <- ifelse(real.time <= cens.time,real.time,cens.time)
 #'
-#' #   Fit a Cox proportional hazards model by CoxBoost
-#'
+#' # Fit a Cox proportional hazards model by CoxBoost
 #' cbfit <- CoxBoost(time=obs.time,status=status,x=x,stepno=100,
 #'                   penalty=100)
 #'
-#' #   estimate p-values
-#'
+#' # estimate p-values (increase `permute.n` for more robust results)
 #' p1 <- estimPVal(cbfit,x,permute.n=10)
 #'
-#' #   get a second vector of estimates for checking how large
-#' #   random variation is
-#'
+#' # get a second vector of estimates for checking how large
+#' # random variation is
 #' p2 <- estimPVal(cbfit,x,permute.n=10)
 #'
 #' plot(p1,p2,xlim=c(0,1),ylim=c(0,1),xlab="permute 1",ylab="permute 2")

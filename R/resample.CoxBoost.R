@@ -143,7 +143,8 @@
 #'   time=obs.time,status=obs.status,x=x,
 #'   # use more repetitions (eg `rep = 100`) for more stable results
 #'   rep=5,
-#'   maxstepno=200,multicore=FALSE,
+#'   # increase `maxstepno` for more boosting iterations
+#'   maxstepno=50,multicore=FALSE,
 #'   mix.list=mix.list,
 #'   stratum=group,stratnotinfocus=0,penalty=sum(obs.status)*(1/0.02-1),
 #'   criterion="hscore",unpen.index=NULL)
@@ -166,9 +167,9 @@
 #' #  which contains resampling inclusion frequencies for the different
 #' #  covariates and different weights.
 #'
-#' # two plotting functions are available for the resulting object:
-#' stabtrajec(RIF)
-#' weightfreqmap(RIF)
+#' # See two plotting functions that are available for the resulting object:
+#' # stabtrajec(RIF)
+#' # weightfreqmap(RIF)
 #' }
 #' @export resample.CoxBoost
 resample.CoxBoost <- function(time,status,x,rep=100,maxstepno=200,multicore=TRUE,

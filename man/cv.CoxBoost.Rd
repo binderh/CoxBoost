@@ -105,7 +105,7 @@ the optimal number of boosting steps.
 \examples{
 
 \donttest{
-#   Generate some survival data with 10 informative covariates
+# Generate some survival data with 10 informative covariates
 n <- 200; p <- 100
 beta <- c(rep(1,10),rep(0,p-10))
 x <- matrix(rnorm(n*p),n,p)
@@ -114,21 +114,19 @@ cens.time <- rexp(n,rate=1/10)
 status <- ifelse(real.time <= cens.time,1,0)
 obs.time <- ifelse(real.time <= cens.time,real.time,cens.time)
 
+# 5-fold cross-validation
+# increase `maxstepno` for more boosting steps
+cv.res <- cv.CoxBoost(time=obs.time,status=status,x=x,maxstepno=50,
+                      K=5,type="verweij",penalty=100)
 
-#  10-fold cross-validation
-
-cv.res <- cv.CoxBoost(time=obs.time,status=status,x=x,maxstepno=500,
-                      K=10,type="verweij",penalty=100)
-
-#   examine mean partial log-likelihood in the course of the boosting steps
+# examine mean partial log-likelihood in the course of the boosting steps
 plot(cv.res$mean.logplik)
 
-#   Fit with optimal number of boosting steps
+# Fit with optimal number of boosting steps
 
 cbfit <- CoxBoost(time=obs.time,status=status,x=x,stepno=cv.res$optimal.step,
                   penalty=100)
 summary(cbfit)
-
 }
 
 }
