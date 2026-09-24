@@ -17,23 +17,29 @@ export(stabtrajec)
 export(weightfreqmap)
 import(Matrix)
 importFrom(grDevices,gray)
-importFrom(graphics,abline)
-importFrom(graphics,axis)
-importFrom(graphics,legend)
-importFrom(graphics,lines)
-importFrom(graphics,points)
-importFrom(graphics,text)
-importFrom(stats,as.dist)
-importFrom(stats,cor)
-importFrom(stats,hclust)
-importFrom(stats,heatmap)
-importFrom(stats,model.frame)
-importFrom(stats,model.matrix)
-importFrom(stats,model.response)
-importFrom(stats,pchisq)
-importFrom(stats,predict)
-importFrom(stats,sd)
-importFrom(stats,terms)
-importFrom(survival,Surv)
-importFrom(survival,survfit)
+importFrom(graphics,
+  abline,
+  axis,
+  legend,
+  lines,
+  points,
+  text
+)
+importFrom(stats,
+  as.dist,
+  cor,
+  hclust,
+  heatmap,
+  model.frame,
+  model.matrix,
+  model.response,
+  pchisq,
+  predict,
+  sd,
+  terms
+)
+importFrom(survival,
+  Surv,
+  survfit
+)
 useDynLib(CoxBoost, .registration = TRUE)
