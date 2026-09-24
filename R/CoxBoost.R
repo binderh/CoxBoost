@@ -1269,10 +1269,10 @@ coef.CoxBoost <- function(object,at.step=NULL,scaled=TRUE,...) {
 #' @param subset an optional vector specifying a subset of observations to be
 #' used for evaluation.
 #' @param at.step scalar or vector of boosting step(s) at which prediction is
-#' wanted. If \code{type="risk"} is used, only one step is admissible. If no
-#' step is given, the final boosting step is used.
+#' wanted. If \code{type="risk"} or \code{type="CIF"} is used, only one step
+#' is admissible. If no step is given, the final boosting step is used.
 #' @param times vector with \code{T} time points where prediction is wanted.
-#' Only needed for \code{type="risk"}
+#' Only needed for \code{type="risk"} or \code{type="CIF"}.
 #' @param type type of prediction to be returned: \code{"lp"} gives the linear
 #' predictor, \code{"logplik"} the partial log-likelihood, \code{"risk"} the
 #' predicted probability of not yet having had the event at the time points
@@ -1289,6 +1289,17 @@ coef.CoxBoost <- function(object,at.step=NULL,scaled=TRUE,...) {
 #' length(at.step)} matrix (\code{at.step} being a vector) with predictions is
 #' returned.  For \code{type="risk"} or \code{type="CIF"} a \code{n.new * T}
 #' matrix with predicted probabilities at the specific time points is returned.
+#' For models with multiple causes, a named list with one result per cause is
+#' returned.
+#' @details For cause-specific hazard models, cumulative incidence is computed
+#' at the observed event times using a matrix-exponential update scheme. If
+#' \eqn{dH_k} is the cumulative-hazard increment for cause \eqn{k} and \eqn{dH = \sum_k dH_k},
+#' the CIF increment is \eqn{S(t-) (1 - \exp(-dH)) dH_k / dH}, with zero
+#' increment when \eqn{dH = 0}. This corresponds to a piecewise-constant
+#' cause-specific hazard within each interval.  Consequently, each CIF is
+#' non-decreasing and the CIFs satisfy \eqn{1 - \exp(-\sum_k H_k(t))}.
+#' Predictions are constant between event times.
+#' For these models, \code{type="risk"} returns one minus the CIF for each cause.
 #' @author Harald Binder \email{binderh@@uni-mainz.de}
 #' @keywords models regression survial
 #' @examples
@@ -1525,68 +1536,48 @@ predict.CoxBoost <- function(object,newdata=NULL,newtime=NULL,newstatus=NULL,sub
     }
 
     if (type == "risk" || type == "CIF") {
-        all.event.times <- object$event.times
-        if (all.event.times[1] > 0) all.event.times <- c(0,all.event.times)
-        if (max(all.event.times) < max(times)) {
-            all.event.times <- c(all.event.times,max(times))
-        } else {
-            all.event.times <- all.event.times[all.event.times <= max(times)]
-        }
-
-        cum.haz <- matrix(0,length(res[[1]][1,]),length(all.event.times))
+        all.event.times <- object$event.times[object$event.times <= max(c(times,-Inf))]
+        total.haz <- matrix(0,ncol(res[[1]]),length(all.event.times))
 
         for (cause.index in seq(along=object$causes)) {
-            add.haz <- matrix(0,length(res[[1]][1,]),length(all.event.times))
+            actual.haz <- matrix(0,nrow(total.haz),length(all.event.times))
 
             for (stratum.index in seq(along=object$strata)) {
                 actual.smask <- (stratum == object$strata[stratum.index])
+                if (!any(actual.smask)) next
                 model.index <- (cause.index-1)*length(object$strata)+stratum.index
 
-                actual.bas.haz <- unlist(lapply(all.event.times,function(x) ifelse(x < object$model[[model.index]]$event.times[1],0,object$model[[model.index]]$Lambda[at.step[[cause.index]][1]+1,rev(which(object$model[[model.index]]$event.times <= x))[1]])))
-                add.haz[actual.smask,] <- (exp(res[[cause.index]][1,actual.smask]) %*% t(actual.bas.haz))
+                event.index <- findInterval(all.event.times,object$model[[model.index]]$event.times)
+                actual.bas.haz <- c(0,object$model[[model.index]]$Lambda[at.step[[cause.index]][1]+1,])[event.index+1]
+                actual.haz[actual.smask,] <- exp(res[[cause.index]][1,actual.smask]) %*% t(diff(c(0,actual.bas.haz)))
             }
 
-            cum.haz <- cum.haz + add.haz
+            res[[cause.index]] <- actual.haz
+            total.haz <- total.haz + actual.haz
         }
 
-        all.surv <- exp(-cum.haz)
-        t.all.surv <- t((all.surv[,1:(ncol(all.surv)-1)] + all.surv[,2:ncol(all.surv)])/2)
-        #t.all.surv <- t(all.surv[,2:ncol(all.surv)])
+        # At each event time, allocate the loss of overall survival in proportion
+        # to the cause-specific hazard jumps (the matrix-exponential estimator).
+        # Accumulating these non-negative increments preserves monotonicity and
+        # sum_k CIF_k(t) = 1 - exp(-sum_k H_k(t)), without rescaling past CIFs.
+        cum.haz <- numeric(nrow(total.haz))
+        for (time.index in seq(along=all.event.times)) {
+            hazard.jump <- total.haz[,time.index]
+            event.prob <- exp(-cum.haz) * -expm1(-hazard.jump)
+            positive <- hazard.jump > 0
 
-        all.cif <- matrix(0,nrow(cum.haz),length(all.event.times))
-
-        for (cause.index in seq(along=object$causes)) {
-            actual.cif <- matrix(0,nrow(cum.haz),length(all.event.times))
-
-            for (stratum.index in seq(along=object$strata)) {
-                actual.smask <- (stratum == object$strata[stratum.index])
-                model.index <- (cause.index-1)*length(object$strata)+stratum.index
-
-                actual.event.times <- object$model[[model.index]]$event.times
-                actual.cum.haz <- exp(res[[cause.index]][1,actual.smask]) %*% t(object$model[[model.index]]$Lambda[at.step[[cause.index]][1]+1,])
-
-                if (actual.event.times[1] != 0) {
-                    actual.cum.haz <- cbind(rep(0,nrow(actual.cum.haz)),actual.cum.haz)
-                    actual.event.times <- c(0,actual.event.times)
-                }
-                actual.haz <- apply(actual.cum.haz,1,diff)/diff(actual.event.times)
-                all.event.index <- unlist(lapply(all.event.times[-length(all.event.times)],function(x) rev(which(actual.event.times <= x))[1]))
-                actual.haz <- rbind(actual.haz,rep(0,ncol(actual.haz)))[all.event.index,]
-
-                actual.cif[actual.smask,] <- cbind(rep(0,length(res[[cause.index]][1,actual.smask])),t(apply(actual.haz * diff(all.event.times) * t.all.surv,2,cumsum)))
+            for (cause.index in seq(along=object$causes)) {
+                increment <- numeric(nrow(total.haz))
+                increment[positive] <- event.prob[positive] * (res[[cause.index]][positive,time.index]/hazard.jump[positive])
+                if (time.index > 1) increment <- res[[cause.index]][,time.index-1] + increment
+                res[[cause.index]][,time.index] <- increment
             }
-
-            res[[cause.index]] <- actual.cif
-
-            all.cif <- all.cif + actual.cif
+            cum.haz <- cum.haz + hazard.jump
         }
 
-        times.index <- unlist(lapply(times,function(x) rev(which(all.event.times <= x))[1]))
-        scale.cif <- (1 - all.surv)/all.cif
-        scale.cif[,1] <- 0
-
+        times.index <- findInterval(times,all.event.times)+1
         for (i in seq(along=object$causes)) {
-            res[[i]] <- (res[[i]]*scale.cif)[,times.index]
+            res[[i]] <- cbind(0,res[[i]])[,times.index,drop=FALSE]
             if (type == "risk") res[[i]] <- 1 - res[[i]]
         }
     }

@@ -41,11 +41,11 @@ stratified Cox regression. In \code{CoxBoost} fit each group gets its own
 baseline hazard.}
 
 \item{at.step}{scalar or vector of boosting step(s) at which prediction is
-wanted. If \code{type="risk"} is used, only one step is admissible. If no
-step is given, the final boosting step is used.}
+wanted. If \code{type="risk"} or \code{type="CIF"} is used, only one step
+is admissible. If no step is given, the final boosting step is used.}
 
 \item{times}{vector with \code{T} time points where prediction is wanted.
-Only needed for \code{type="risk"}}
+Only needed for \code{type="risk"} or \code{type="CIF"}.}
 
 \item{type}{type of prediction to be returned: \code{"lp"} gives the linear
 predictor, \code{"logplik"} the partial log-likelihood, \code{"risk"} the
@@ -62,10 +62,23 @@ For \code{type="lp"} and \code{type="logplik"} a vector of length
 length(at.step)} matrix (\code{at.step} being a vector) with predictions is
 returned.  For \code{type="risk"} or \code{type="CIF"} a \code{n.new * T}
 matrix with predicted probabilities at the specific time points is returned.
+For models with multiple causes, a named list with one result per cause is
+returned.
 }
 \description{
 Obtains predictions at specified boosting steps from a CoxBoost object
 fitted by \code{\link{CoxBoost}}.
+}
+\details{
+For cause-specific hazard models, cumulative incidence is computed
+at the observed event times using a matrix-exponential update scheme. If
+\eqn{dH_k} is the cumulative-hazard increment for cause \eqn{k} and \eqn{dH = \sum_k dH_k},
+the CIF increment is \eqn{S(t-) (1 - \exp(-dH)) dH_k / dH}, with zero
+increment when \eqn{dH = 0}. This corresponds to a piecewise-constant
+cause-specific hazard within each interval.  Consequently, each CIF is
+non-decreasing and the CIFs satisfy \eqn{1 - \exp(-\sum_k H_k(t))}.
+Predictions are constant between event times.
+For these models, \code{type="risk"} returns one minus the CIF for each cause.
 }
 \examples{
 
