@@ -12,6 +12,7 @@ Provides routines for fitting Cox models by likelihood based boosting for single
 
 Authors:
 \itemize{
+  \item John Zobolas \email{bblodfon@gmail.com} (\href{https://orcid.org/0000-0002-3609-8674}{ORCID})
   \item Harald Binder \email{harald.binder@uniklinik-freiburg.de} (\href{https://orcid.org/0000-0002-5666-8662}{ORCID})
 }
 
