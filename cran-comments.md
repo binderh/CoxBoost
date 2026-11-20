@@ -1,4 +1,3 @@
 ## CRAN Review comments
 
-* Improved CIF prediction output (CIFs were descreasing due to some rescaling)
-* Faster examples
+* Numerical stability improvements for CIF predictions
