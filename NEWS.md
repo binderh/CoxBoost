@@ -1,5 +1,8 @@
 # CoxBoost 1.5.3
 
+* Fixed a hang in `cv.CoxBoost()` when generating automatic folds. Fold generation
+  now uses the modeled event codes and reports an error if a required cause has
+  too few events.
 * Improved numerical stability of cumulative incidence function (CIF) predictions in
   `predict.CoxBoost()`. Hazard calculations use the log scale to handle extreme
   predictors. Competing-risks CIFs remain nondecreasing and their sum stays at or

@@ -1631,7 +1631,9 @@ predict.CoxBoost <- function(object,newdata=NULL,newtime=NULL,newstatus=NULL,sub
 #' \code{[0,maxstepno]}.
 #' @param K number of folds to be used for cross-validation. If \code{K} is
 #' larger or equal to the number of non-zero elements in \code{status},
-#' leave-one-out cross-validation is performed.
+#' automatic folds perform leave-one-out cross-validation and require at least
+#' two events of each modeled cause in \code{subset}. Otherwise, automatic folds
+#' require at least \code{K} events of each modeled cause in \code{subset}.
 #' @param type way of calculating the partial likelihood contribution of the
 #' observation in the hold-out folds: \code{"verweij"} uses the more
 #' appropriate method described in Verweij and van Houwelingen (1996),
@@ -1719,36 +1721,49 @@ cv.CoxBoost <- function(time,status,x,subset=1:length(time),weights=NULL,stratum
     if (!is.null(folds) && length(folds) != K) stop("'folds' has to be of length 'K'")
 
     if (is.null(folds)) {
+        if (length(K) != 1L || !is.finite(K) || K < 2 || K != floor(K))
+            stop("'K' must be an integer of at least 2 for automatic folds")
+
+        cv.status <- status[subset]
+        event.table <- table(cv.status[cv.status != 0])
+        if (length(event.table) == 0L) stop("no events in 'subset' for cross-validation")
+        if (cmprsk == "sh") event.table <- event.table[1L]
+        causes <- names(event.table)
+
         if (K >= sum(status != 0)) {    #   leave-one-out cross-validation
+            if (any(event.table < 2L))
+                stop("leave-one-out cross-validation requires at least two events of each modeled cause in 'subset'")
             if (type == "verweij") {
-                folds <- as.list(1:length(time))
+                folds <- as.list(seq_along(cv.status))
             } else {
-                folds <- as.list(which(status != 0))
+                folds <- as.list(which(cv.status != 0))
             }
         } else {
-            event.table <- table(status[subset][status[subset] != 0])
+            scarce.causes <- causes[event.table < K]
+            if (length(scarce.causes) > 0L)
+                stop("automatic folds require at least 'K' events of each modeled cause in 'subset'; too few for cause ",
+                     paste(scarce.causes, collapse = ", "))
 
-            while(TRUE) {
-                folds <- split(sample(1:length(subset)), rep(1:K, length = length(subset)))
-
-                #   make sure there is at least one event in training and test folds respectively
-                #   Note: the Verweij approach actually could deal with folds that contain only
-                #   censored observations, but this is expected to considerably increase variability
-                #   and therefore alse prevented
-
-                if (length(event.table) > 1 && cmprsk != "sh") {
-                    if (!any(unlist(lapply(folds,function(fold) length(table(status[subset][fold][status[subset][fold] != 0])) != length(event.table)))) &&
-                        !any(unlist(lapply(folds,function(fold) length(table(status[subset][-fold][status[subset][-fold] != 0])) != length(event.table)))))
-                    {
-                        break
-                    }
-                } else {
-                    if (!any(unlist(lapply(folds,function(fold) sum(status[subset][fold] == 1))) == 0) &&
-                        !any(unlist(lapply(folds,function(fold) sum(status[subset][-fold] == 1))) == 0))
-                    {
-                        break
-                    }
+            # Preserve existing seeded folds when balanced random splits find a valid partition.
+            fold.ids <- rep_len(seq_len(K),length(cv.status))
+            for (attempt in seq_len(1000L)) {
+                candidate <- split(sample.int(length(cv.status)),fold.ids)
+                if (all(vapply(candidate,function(fold) all(causes %in% cv.status[fold]),logical(1)))) {
+                    folds <- candidate
+                    break
                 }
+            }
+
+            if (is.null(folds)) {
+                # Deal each cause across the folds and continue the rotation to balance fold sizes.
+                groups <- lapply(causes,function(cause) which(cv.status == cause))
+                groups[[length(groups)+1L]] <- which(!(cv.status %in% causes))
+                offset <- 0L
+                for (rows in groups) {
+                    fold.ids[rows[sample.int(length(rows))]] <- (offset + seq_along(rows) - 1L) %% K + 1L
+                    offset <- (offset + length(rows)) %% K
+                }
+                folds <- split(seq_along(cv.status),fold.ids)
             }
         }
     }

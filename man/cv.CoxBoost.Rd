@@ -50,7 +50,9 @@ returned ``optimal'' number of boosting steps will be in the range
 
 \item{K}{number of folds to be used for cross-validation. If \code{K} is
 larger or equal to the number of non-zero elements in \code{status},
-leave-one-out cross-validation is performed.}
+automatic folds perform leave-one-out cross-validation and require at least
+two events of each modeled cause in \code{subset}. Otherwise, automatic folds
+require at least \code{K} events of each modeled cause in \code{subset}.}
 
 \item{type}{way of calculating the partial likelihood contribution of the
 observation in the hold-out folds: \code{"verweij"} uses the more
