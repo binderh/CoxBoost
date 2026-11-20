@@ -1513,7 +1513,7 @@ predict.CoxBoost <- function(object,newdata=NULL,newtime=NULL,newstatus=NULL,sub
             if (length(object$causes) > 1) {
                 res[[cause.index]] <- linear.predictor
             } else {
-                pred.risk <- matrix(0,length(linear.predictor),length(times))
+                prediction <- matrix(0,length(linear.predictor),length(times))
 
                 for (stratum.index in seq(along=object$strata)) {
                     actual.smask <- (stratum == object$strata[stratum.index])
@@ -1523,56 +1523,77 @@ predict.CoxBoost <- function(object,newdata=NULL,newtime=NULL,newstatus=NULL,sub
                     } else {
                         breslow.Lambda <- unlist(lapply(times,function(x) ifelse(x < object$event.times[1],0,object$Lambda[at.step[[actual.cause]][1]+1,rev(which(object$event.times <= x))[1]])))
                     }
-                    pred.risk[actual.smask,] <- exp(exp(linear.predictor[1,actual.smask]) %*% -t(breslow.Lambda))
+                    # Combine the predictor and baseline on the log scale to avoid overflowing exp(lp).
+                    log.cum.haz <- outer(linear.predictor[1,actual.smask],log(as.numeric(breslow.Lambda)),"+")
+                    # A zero baseline hazard gives zero risk of an event, even for an infinite predictor.
+                    log.cum.haz[,which(breslow.Lambda == 0)] <- -Inf
+                    cum.haz <- exp(log.cum.haz)
+                    # expm1 retains small CIFs when exp(-cum.haz) rounds to one.
+                    prediction[actual.smask,] <- if (type == "risk") exp(-cum.haz) else -expm1(-cum.haz)
                 }
-
-                if (type == "risk") {
-                    return(pred.risk)
-                } else {
-                    return(1-pred.risk)
-                }
+                return(prediction)
             }
         }
     }
 
     if (type == "risk" || type == "CIF") {
         all.event.times <- object$event.times[object$event.times <= max(c(times,-Inf))]
-        total.haz <- matrix(0,ncol(res[[1]]),length(all.event.times))
+        n.pred <- ncol(res[[1]])
+        strata <- match(stratum,object$strata)
+        log.baseline <- vector("list",length(res))
 
         for (cause.index in seq(along=object$causes)) {
-            actual.haz <- matrix(0,nrow(total.haz),length(all.event.times))
+            log.baseline[[cause.index]] <- matrix(-Inf,length(object$strata),length(all.event.times))
 
             for (stratum.index in seq(along=object$strata)) {
-                actual.smask <- (stratum == object$strata[stratum.index])
-                if (!any(actual.smask)) next
+                if (!(stratum.index %in% strata)) next
                 model.index <- (cause.index-1)*length(object$strata)+stratum.index
 
                 event.index <- findInterval(all.event.times,object$model[[model.index]]$event.times)
                 actual.bas.haz <- c(0,object$model[[model.index]]$Lambda[at.step[[cause.index]][1]+1,])[event.index+1]
-                actual.haz[actual.smask,] <- exp(res[[cause.index]][1,actual.smask]) %*% t(diff(c(0,actual.bas.haz)))
+                log.baseline[[cause.index]][stratum.index,] <- log(diff(c(0,actual.bas.haz)))
             }
-
-            res[[cause.index]] <- actual.haz
-            total.haz <- total.haz + actual.haz
         }
 
         # At each event time, allocate the loss of overall survival in proportion
         # to the cause-specific hazard jumps (the matrix-exponential estimator).
-        # Accumulating these non-negative increments preserves monotonicity and
-        # sum_k CIF_k(t) = 1 - exp(-sum_k H_k(t)), without rescaling past CIFs.
-        cum.haz <- numeric(nrow(total.haz))
+        lp <- lapply(res,function(predictor) predictor[1,])
+        res <- lapply(lp,function(predictor) matrix(0,length(predictor),length(all.event.times)))
+        cum.haz <- numeric(n.pred)
+        cif <- matrix(0,n.pred,length(res))
         for (time.index in seq(along=all.event.times)) {
-            hazard.jump <- total.haz[,time.index]
-            event.prob <- exp(-cum.haz) * -expm1(-hazard.jump)
-            positive <- hazard.jump > 0
+            log.jump <- lapply(log.baseline,function(haz) haz[strata,time.index])
+            # Only causes with a hazard jump at this time determine the predictor shift.
+            active.lp <- Map(function(lp,jump) replace(lp,which(jump == -Inf),-Inf),lp,log.jump)
+            max.lp <- Reduce(pmax,active.lp)
+            rows <- which(is.na(max.lp) | max.lp > -Inf)
+            if (length(rows) > 0) {
+                # Center the predictors first so large values cannot erase the baseline hazard ratios.
+                lp.shift <- max.lp[rows]
+                centered.log.haz <- Map(function(lp,jump) (lp[rows] - lp.shift) + jump[rows],active.lp,log.jump)
+                # Scale by the largest jump so the cause shares remain finite if the total hazard overflows.
+                log.scale <- Reduce(pmax,centered.log.haz)
+                scaled.haz <- do.call(cbind,lapply(centered.log.haz,function(haz) exp(haz - log.scale)))
+                scaled.total <- rowSums(scaled.haz)
+                hazard.jump <- exp(lp.shift + (log.scale + log(scaled.total)))
+                event.prob <- exp(-cum.haz[rows]) * -expm1(-hazard.jump)
+                cum.haz[rows] <- cum.haz[rows] + hazard.jump
 
-            for (cause.index in seq(along=object$causes)) {
-                increment <- numeric(nrow(total.haz))
-                increment[positive] <- event.prob[positive] * (res[[cause.index]][positive,time.index]/hazard.jump[positive])
-                if (time.index > 1) increment <- res[[cause.index]][,time.index-1] + increment
-                res[[cause.index]][,time.index] <- increment
+                previous.cif <- cif[rows,,drop=FALSE]
+                updated.cif <- previous.cif + event.prob * (scaled.haz / scaled.total)
+                # Correct rounding overshoots using only this time's increments.
+                over <- which(rowSums(updated.cif) > 1)
+                for (cause.index in seq_along(res)) {
+                    if (length(over) == 0) break
+                    remaining <- 1 - rowSums(updated.cif[over,-cause.index,drop=FALSE])
+                    updated.cif[over,cause.index] <- pmax(previous.cif[over,cause.index],
+                        pmin(updated.cif[over,cause.index],remaining))
+                    over <- over[rowSums(updated.cif[over,,drop=FALSE]) > 1]
+                }
+                cif[rows,] <- updated.cif
             }
-            cum.haz <- cum.haz + hazard.jump
+
+            for (cause.index in seq_along(res)) res[[cause.index]][,time.index] <- cif[,cause.index]
         }
 
         times.index <- findInterval(times,all.event.times)+1
