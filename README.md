@@ -102,9 +102,10 @@ maximal test set partial log-likelihood:
 print(cbfit$xnames[cbfit$coefficients[which.max(step_pll),] != 0])
 ```
 
-    #  [1] "V1"  "V2"  "V3"  "V4"  "V5"  "V6"  "V7"  "V8"  "V9"  "V10" "V12" "V18" "V20"
-    # [14] "V24" "V27" "V30" "V31" "V32" "V33" "V37" "V38" "V41" "V42" "V44" "V53" "V56"
-    # [27] "V59" "V63" "V69" "V71" "V72" "V73" "V76" "V78" "V80" "V82" "V84" "V87" "V99"
+    #  [1] "V1"  "V2"  "V3"  "V4"  "V5"  "V6"  "V7"  "V8"  "V9"  "V10" "V12"
+    # [12] "V18" "V20" "V24" "V27" "V30" "V31" "V32" "V33" "V37" "V38" "V41"
+    # [23] "V42" "V44" "V53" "V56" "V59" "V63" "V69" "V71" "V72" "V73" "V76"
+    # [34] "V78" "V80" "V82" "V84" "V87" "V99"
 
 We refit the `CoxBoost` model but with covariates 1 and 2 as mandatory:
 
