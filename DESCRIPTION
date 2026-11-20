@@ -1,7 +1,7 @@
 Package: CoxBoost
 Title: Cox Models by Likelihood Based Boosting for a Single Survival
     Endpoint or Competing Risks
-Version: 1.5.2.9000
+Version: 1.5.3
 Authors@R: c(
     person("John", "Zobolas", , "bblodfon@gmail.com", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0002-3609-8674")),
@@ -24,6 +24,6 @@ Suggests:
     prodlim,
     snowfall
 Encoding: UTF-8
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1
 URL: https://github.com/binderh/CoxBoost
 BugReports: https://github.com/binderh/CoxBoost/issues

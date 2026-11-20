@@ -1,4 +1,16 @@
-# CoxBoost (development version)
+# CoxBoost 1.5.3
+
+* Improved numerical stability of cumulative incidence function (CIF) predictions in
+  `predict.CoxBoost()`. Hazard calculations use the log scale to handle extreme
+  predictors. Competing-risks CIFs remain nondecreasing and their sum stays at or
+  below one, avoiding negative values for the corresponding `type = "risk"`
+  predictions. Single-cause CIFs preserve very small positive probabilities.
+* An empty time grid now returns a zero-column matrix for single-cause predictions.
+  In competing-risks predictions, missing predictors propagate to `NA` when they
+  affect a hazard jump.
+* Resampling comparisons with 1.5.2 on synthetic data and the `pbc`, `mgus2`,
+  `transplant`, and `hoel` datasets from `survival` found no appreciable CIF
+  differences. The largest absolute difference was `1.33e-15`.
 
 # CoxBoost 1.5.2
 
